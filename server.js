@@ -8,6 +8,10 @@ const loginRoute = require("./src/routes/loginRoute")
 const categoryRoute = require("./src/routes/categoryRoute")
 const path = require("path");
 const productRoute = require("./src/routes/productRoute");
+const bannerRoute = require("./src/routes/bannerRoute");
+const productVarientRoute = require("./src/routes/productVarientRoute");
+const productDetailsRoute = require("./src/routes/productDetailsRoute");
+const cartRoute = require("./src/routes/cartRoute");
 
 
 dotenv.config();
@@ -19,13 +23,15 @@ app.use(cors({ origin: "*" }));
 app.use(express.json()); // Required for parsing JSON body
 
 // Routes
-app.use("/api", authRoutes);
-app.use("/api", IsDistributorRoute);
-app.use("/api", loginRoute);
-app.use('/api/category', categoryRoute);
-app.use("/api/product", productRoute);
-
-
+app.use( authRoutes);
+app.use( IsDistributorRoute);
+app.use( loginRoute);
+app.use('/category', categoryRoute);
+app.use("/product", productRoute);
+app.use("/banner", bannerRoute);
+app.use("/product", productVarientRoute);
+app.use("/product",productDetailsRoute);
+app.use("/cart", cartRoute);
 
 //  Test DB connection once
 (async () => {
