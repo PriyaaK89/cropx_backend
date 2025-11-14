@@ -11,3 +11,9 @@ exports.getAllCategories = async () => {
   return rows;
 };
 
+exports.deleteCategory = async (id) => {
+  const sql = "DELETE FROM categories WHERE id =?";
+  const [result] = await db.query(sql, [id]);
+  return result;
+}
+
