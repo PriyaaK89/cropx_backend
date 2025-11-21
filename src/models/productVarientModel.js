@@ -24,24 +24,6 @@ exports.createVariant = async (data) => {
   return result;
 };
 
-// Get all variants by product
-// exports.getVariantsByProduct = async (product_id) => {
-//   const sql = `
-//     SELECT 
-//       id AS variant_id,
-//       quantity_type,
-//       quantity_value,
-//       actual_price,
-//       discount_percent,
-//       discounted_price
-//     FROM product_variants
-//     WHERE product_id = ?
-//   `;
-
-//   const [rows] = await db.query(sql, [product_id]);
-//   return rows;
-// };
-
 exports.getVariantsByProduct = async (product_id) => {
   //  1. Fetch all single (base) variants
   const [singlePacks] = await db.query(`
@@ -121,3 +103,12 @@ exports.updateVariant = async (id, data) => {
   const [result] = await db.query(sql, params);
   return result;
 };
+
+// Delete variant by ID
+exports.deleteVariantById = async (variant_id) => {
+  const sql = `DELETE FROM product_variants WHERE id = ?`;
+  const [result] = await db.query(sql, [variant_id]);
+  return result;
+};
+
+

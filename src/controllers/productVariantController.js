@@ -2,7 +2,8 @@ const { createVariant } = require("../models/productVarientModel");
 const { getProductbyId } = require("../models/productModel");
 const {
   getVariantById,
-  updateVariant,
+  updateVariant,deleteVariantById,
+  checkMultipacksForVariant
 } = require("../models/productVarientModel");
 
 exports.addVariant = async (req, res) => {
@@ -128,3 +129,30 @@ exports.UpdateProductVariant = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong!" });
   }
 };
+
+exports.deleteVariant = async (req, res) => {
+  try {
+    const { variant_id } = req.params;
+
+    // 1. Check if variant exists
+    const variant = await getVariantById(variant_id);
+    if (!variant) {
+      return res.status(404).json({ message: "Variant not found" });
+    }
+
+    // 2. Delete the variant
+    await deleteVariantById(variant_id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Single variant deleted successfully",
+      variant_id,
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
