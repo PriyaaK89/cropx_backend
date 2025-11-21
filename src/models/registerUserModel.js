@@ -23,4 +23,14 @@ const findUserByEmail = async (email) => {
   }
 };
 
-module.exports = { createUser, findUserByEmail };
+const getAllUsers = async () => {
+  try {
+    const [rows] = await db.query("SELECT * FROM users ORDER BY id DESC");
+    return rows;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+};
+
+module.exports = { createUser, findUserByEmail, getAllUsers };

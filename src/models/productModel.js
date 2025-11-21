@@ -24,9 +24,15 @@ exports.getAllProducts = async () => {
   return rows;
 };
 
+
 exports.getProductbyId = async (id) => {
-  const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
-  return rows[0];
+  try {
+    const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
+    return rows[0];  
+  } catch (error) {
+    console.error("Error in getProductById:", error);
+    throw error;
+  }
 };
 
 exports.getProductsWithVariants = async () => {
@@ -108,7 +114,7 @@ exports.deleteProduct = async (id) => {
 exports.updateProduct = async (id, data) => {
   const sql = `
     UPDATE products 
-    SET product_name=?, product_category=?, product_description=?, product_type=?, product_img=?, stock_qty = ?, mfg_date = ?, exp_date = ?,
+    SET product_name=?, product_category=?, product_description=?, product_type=?, product_img=?, stock_qty = ?, mfg_date = ?, exp_date = ?
     WHERE id=?
   `;
   const params = [
@@ -129,4 +135,11 @@ exports.updateProduct = async (id, data) => {
 
   const [result] = await db.query(sql, params);
   return result;
+};
+
+exports.getProductsByCategoryModel = async (category) => {
+  const query = `SELECT * FROM products WHERE product_category = ?`;
+
+  const [rows] = await db.query(query, [category]);
+  return rows;
 };

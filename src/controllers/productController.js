@@ -7,7 +7,9 @@ const {
   getProductbyId,
   updateProduct,
   getProductsWithVariants,
+  getProductsByCategoryModel,
 } = require("../models/productModel");
+const { getVariantsByProduct } = require("../models/productVarientModel");
 
 exports.addProduct = async (req, res) => {
   try {
@@ -16,9 +18,9 @@ exports.addProduct = async (req, res) => {
       product_category,
       product_description,
       product_type,
-       stock_qty,
+      stock_qty,
       mfg_date,
-      exp_date
+      exp_date,
     } = req.body;
 
     if (!product_name || !product_category || !product_type) {
@@ -38,15 +40,6 @@ exports.addProduct = async (req, res) => {
     );
 
     fs.unlinkSync(filePath); // remove local file temp
-
-    // if (product_type === "liquid" && !["liter", "ml"].includes(quantity_type)) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "Liquid can only be liter or ml" });
-    // }
-    // if (product_type === "solid" && !["kg", "gm"].includes(quantity_type)) {
-    //   return res.status(400).json({ message: "Solid can only be kg or gm" });
-    // }
 
     const product = {
       product_name,
@@ -75,11 +68,24 @@ exports.addProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
+    let {
+      page = 1,
+      limit = 10,
+      search = "",
+      category = "",
+      expiry_status = "",
+    } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+    const startIndex = (page - 1) * limit;
+
+    // 1️⃣ Fetch all products with variants + multipacks
     const { variants, multipacks } = await getProductsWithVariants();
 
-    
+    // 2️⃣ Format products
     const finalData = variants.reduce((acc, variant) => {
-      let product = acc.find(p => p.id === variant.product_id);
+      let product = acc.find((p) => p.id === variant.product_id);
       if (!product) {
         product = {
           id: variant.product_id,
@@ -88,9 +94,9 @@ exports.getProducts = async (req, res) => {
           product_description: variant.product_description,
           product_type: variant.product_type,
           product_img: variant.product_img,
-          stock_qty: variant.stock_qty,       
-          mfg_date: variant.mfg_date,         
-          exp_date: variant.exp_date,         
+          stock_qty: variant.stock_qty,
+          mfg_date: variant.mfg_date,
+          exp_date: variant.exp_date,
           single_packs: [],
           multi_packs: [],
         };
@@ -109,9 +115,9 @@ exports.getProducts = async (req, res) => {
       return acc;
     }, []);
 
-    
-    multipacks.forEach(mp => {
-      const product = finalData.find(p => p.id === mp.product_id);
+    // 3️⃣ Add multipacks
+    multipacks.forEach((mp) => {
+      const product = finalData.find((p) => p.id === mp.product_id);
       if (product) {
         product.multi_packs.push({
           multipack_id: mp.multipack_id,
@@ -126,10 +132,10 @@ exports.getProducts = async (req, res) => {
       }
     });
 
-    
+    // 4️⃣ Add expiry status
     const currentDate = new Date();
 
-    finalData.forEach(product => {
+    finalData.forEach((product) => {
       if (product.exp_date) {
         const expDate = new Date(product.exp_date);
         const diffMonths =
@@ -150,7 +156,50 @@ exports.getProducts = async (req, res) => {
       }
     });
 
-    res.status(200).json({ success: true, data: finalData });
+    // 5️⃣ Apply Filters
+    let filteredData = finalData;
+
+    // Search filter (product_name)
+    if (search) {
+      filteredData = filteredData.filter((p) => {
+        const s = search.toLowerCase();
+        return (
+          p.product_name.toLowerCase().includes(s) ||
+          p.product_category.toLowerCase().includes(s)
+        );
+      });
+    }
+
+    // Category filter
+    if (category) {
+      filteredData = filteredData.filter(
+        (p) => p.product_category.toLowerCase() === category.toLowerCase()
+      );
+    }
+
+    // Expiry status filter
+    if (expiry_status) {
+      filteredData = filteredData.filter(
+        (p) => p.expiry_status.toLowerCase() === expiry_status.toLowerCase()
+      );
+    }
+
+    // 6️⃣ Pagination
+    const totalProducts = filteredData.length;
+
+    const paginatedProducts = filteredData.slice(
+      startIndex,
+      startIndex + limit
+    );
+
+    res.status(200).json({
+      success: true,
+     page,
+    itemsPerPage: limit,
+    totalItems: totalProducts,
+    totalPages: Math.ceil(totalProducts / limit),
+    data: paginatedProducts,
+    });
   } catch (error) {
     console.error("getProducts error:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -165,7 +214,7 @@ exports.UpdateProducts = async (req, res) => {
       product_category,
       product_description,
       product_type,
-       stock_qty,
+      stock_qty,
       mfg_date,
       exp_date,
       // quantity_type,
@@ -249,5 +298,45 @@ exports.removeProducts = async (req, res) => {
   } catch (error) {
     console.log(error, "error");
     res.status(500).json({ message: "Something went wrong." });
+  }
+};
+
+exports.getProductByID = async (req, res) => {
+  try {
+    const { product_id } = req.params;
+
+    const product = await getProductbyId(product_id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const variants = await getVariantsByProduct(product_id);
+
+    return res.json({
+      success: true,
+      product,
+      variants,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.getProductsByCategory = async (req, res) => {
+  try {
+    const { category } = req.params;
+
+    const products = await getProductsByCategoryModel(category);
+
+    return res.status(200).json({
+      success: true,
+      total: products.length,
+      data: products,
+    });
+  } catch (error) {
+    console.log("Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };

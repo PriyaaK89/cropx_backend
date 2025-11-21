@@ -1,4 +1,4 @@
-const { createUser, findUserByEmail } = require("../models/registerUserModel");
+const { createUser, findUserByEmail, getAllUsers } = require("../models/registerUserModel");
 
 const signup = async (req, res) => {
   try {
@@ -34,4 +34,19 @@ const signup = async (req, res) => {
   }
 };
 
-module.exports = { signup };
+const getUsers = async (req, res) => {
+  try {
+    const users = await getAllUsers();
+
+    res.status(200).json({
+      success: true,
+      totalUsers: users.length,
+      users,
+    });
+  } catch (error) {
+    console.error("Get Users Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = { signup, getUsers };

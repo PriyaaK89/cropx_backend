@@ -20,8 +20,8 @@ const app = express();
 
 // Middleware
 app.use(cors({ origin: "*" }));
-app.use(express.json()); // Required for parsing JSON body
-
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Routes
 app.use( authRoutes);
 app.use( IsDistributorRoute);

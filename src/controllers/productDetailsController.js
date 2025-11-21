@@ -1,3 +1,4 @@
+const fs = require("fs");
 const { createProductDetails } = require("../models/productDetailsModel");
 const { getProductbyId } = require("../models/productModel");
 const { getVariantsByProduct } = require("../models/productVarientModel");
@@ -5,48 +6,57 @@ const {
   updateProductDetails,
   getDetailsByProductId,
 } = require("../models/productDetailsModel");
+const imgbbService = require("../service/ImgbbService");
 
 exports.addProductDetails = async (req, res) => {
   try {
     const { product_id } = req.params;
-    const {
-      images,
-      product_overview,
-      key_features_and_benefits,
-      expert_advice,
-      additional_information,
-    } = req.body;
 
     if (!product_id) {
       return res.status(400).json({ message: "product_id required" });
     }
 
-    const result = await createProductDetails({
-      product_id,
-      images,
+    const files = req.files || [];
+    const imageUrls = [];
+
+    // Upload each file to ImgBB
+    for (const file of files) {
+      const url = await imgbbService.uploadToImgBB(file.buffer, file.originalname);
+      imageUrls.push({ src: url });
+    }
+
+    // Parse JSON fields from req.body
+    const product_overview = safeJSON(req.body.product_overview || "[]");
+    const key_features_and_benefits = safeJSON(req.body.key_features_and_benefits || "[]");
+    const expert_advice = safeJSON(req.body.expert_advice || "[]");
+    const additional_information = safeJSON(req.body.additional_information || "[]");
+
+    const data = {
+      images: imageUrls,
       product_overview,
       key_features_and_benefits,
       expert_advice,
       additional_information,
+    };
+
+    const result = await createProductDetails({
+      product_id,
+      ...data,
     });
 
     return res.status(201).json({
       success: true,
       message: "Product detail added",
       detail_id: result.insertId,
-      data: {
-        images,
-        product_overview,
-        key_features_and_benefits,
-        expert_advice,
-        additional_information,
-      },
+      data,
     });
+
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 const safeJSON = (val) => {
   try {
@@ -74,8 +84,8 @@ exports.getProductDetails = async (req, res) => {
       product_description: product.product_description,
       product_type: product.product_type,
       product_img: product.product_img,
-      single_packs: variants.filter(v => !v.multipack_id),
-multi_packs: variants.filter(v => v.multipack_id),
+      single_packs: variants.single_packs,
+      multi_packs: variants.multi_packs,
       details: detail
         ? {
       images: safeJSON(detail.images),
@@ -94,60 +104,97 @@ multi_packs: variants.filter(v => v.multipack_id),
   }
 };
 
-exports.updateProductDetails = async (req, res) => {
+const parseField = (value) => {
+  try {
+    if (!value) return [];
+    if (typeof value === "string") return JSON.parse(value);
+    return value;
+  } catch (err) {
+    console.log("parseField failed =>", value);
+    return [];
+  }
+};
+
+exports.editProductDetails = async (req, res) => {
   try {
     const { product_id } = req.params;
+
     const existing = await getDetailsByProductId(product_id);
+    if (!existing) {
+      return res.status(404).json({ message: "Details not found" });
+    }
 
-    if (!existing)
-      return res.status(404).json({ message: "Product detail not found" });
+    let updateData = {};
+    const files = req.files || [];
 
-    const data = req.body;
+    // Handle file uploads (using memoryStorage)
+    if (files.length > 0) {
+      const formattedImages = [];
 
-    // convert json fields to string if provided in req
-    if (data.images) data.images = JSON.stringify(data.images);
-    if (data.product_overview)
-      data.product_overview = JSON.stringify(data.product_overview);
-    if (data.key_features_and_benefits)
-      data.key_features_and_benefits = JSON.stringify(
-        data.key_features_and_benefits
+      for (const file of files) {
+        const base64Img = file.buffer.toString("base64");
+        const url = await imgbbService.uploadToImgBB(base64Img, file.originalname);
+
+        formattedImages.push({ src: url }); // FIX ✔
+      }
+
+      updateData.images = JSON.stringify(formattedImages); // FIX ✔
+    }
+
+    // Handle JSON body fields
+    if (req.body?.product_overview) {
+      updateData.product_overview = JSON.stringify(parseField(req.body.product_overview));
+    }
+
+    if (req.body?.key_features_and_benefits) {
+      updateData.key_features_and_benefits = JSON.stringify(
+        parseField(req.body.key_features_and_benefits)
       );
-    if (data.expert_advice)
-      data.expert_advice = JSON.stringify(data.expert_advice);
-    if (data.additional_information)
-      data.additional_information = JSON.stringify(data.additional_information);
+    }
 
-    // update details
-    await updateProductDetails(product_id, data);
+    if (req.body?.expert_advice) {
+      updateData.expert_advice = JSON.stringify(parseField(req.body.expert_advice));
+    }
 
-    // fetch updated details
-    const updatedDetails = await getDetailsByProductId(product_id);
+    if (req.body?.additional_information) {
+      updateData.additional_information = JSON.stringify(
+        parseField(req.body.additional_information)
+      );
+    }
 
-    // parse JSON fields before sending
+    // Update DB
+    await updateProductDetails(product_id, updateData);
+
+    // Fetch updated record
+    const updated = await getDetailsByProductId(product_id);
+
+    // Prepare response
     const responseData = {
-      images: updatedDetails.images ? JSON.parse(updatedDetails.images) : [],
-      product_overview: updatedDetails.product_overview
-        ? JSON.parse(updatedDetails.product_overview)
+      product_id: updated.product_id,
+
+      images: updated.images ? JSON.parse(updated.images) : [],  // FIX ✔ No more .map()
+      product_overview: updated.product_overview ? JSON.parse(updated.product_overview) : [],
+      key_features_and_benefits: updated.key_features_and_benefits
+        ? JSON.parse(updated.key_features_and_benefits)
         : [],
-      key_features_and_benefits: updatedDetails.key_features_and_benefits
-        ? JSON.parse(updatedDetails.key_features_and_benefits)
-        : [],
-      expert_advice: updatedDetails.expert_advice
-        ? JSON.parse(updatedDetails.expert_advice)
-        : [],
-      additional_information: updatedDetails.additional_information
-        ? JSON.parse(updatedDetails.additional_information)
+      expert_advice: updated.expert_advice ? JSON.parse(updated.expert_advice) : [],
+      additional_information: updated.additional_information
+        ? JSON.parse(updated.additional_information)
         : [],
     };
 
     return res.status(200).json({
       success: true,
-      message: "Product Details updated",
+      message: "Product Details Updated Successfully",
       data: responseData,
     });
   } catch (err) {
-    console.log(err);
-    return res.status(500).json({ message: "Internal server error" });
+    console.log("Edit Product Error => ", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
+
 
