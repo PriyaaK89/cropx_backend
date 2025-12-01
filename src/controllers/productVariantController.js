@@ -13,7 +13,7 @@ exports.addVariant = async (req, res) => {
       quantity_type,
       quantity_value,
       actual_price,
-      discount_percent ,
+      discount_percent ,  stock_qty 
     } = req.body;
 
     // fetch product type from product main table
@@ -39,7 +39,7 @@ exports.addVariant = async (req, res) => {
       quantity_type,
       quantity_value,
       actual_price,
-      discount_percent,
+      discount_percent,stock_qty    
     });
 
     return res.status(201).json({
@@ -52,7 +52,7 @@ exports.addVariant = async (req, res) => {
         quantity_type,
         quantity_value,
         actual_price,
-        discount_percent,
+        discount_percent, stock_qty
       },
     });
   } catch (error) {
@@ -71,6 +71,7 @@ exports.UpdateProductVariant = async (req, res) => {
       quantity_value,
       actual_price,
       discount_percent,
+      stock_qty
     } = req.body;
 
     //  Fetch variant to confirm it exists
@@ -113,6 +114,7 @@ exports.UpdateProductVariant = async (req, res) => {
       quantity_value: quantity_value || variant.quantity_value,
       actual_price: actual_price || variant.actual_price,
       discount_percent: discount_percent || variant.discount_percent,
+      stock_qty: stock_qty || variant.stock_qty
     };
 
     //  Update in DB

@@ -48,7 +48,7 @@ exports.getSinglePackItems = async (user_id) => {
       p.product_img,
       p.mfg_date,
       p.exp_date,
-      p.stock_qty,
+      
 
       v.id AS variant_id,
       v.quantity_type,
@@ -85,7 +85,7 @@ exports.getMultiPackItems = async (user_id) => {
       p.product_img,
       p.mfg_date,
       p.exp_date,
-      p.stock_qty,
+    
 
       mp.id AS multipack_id,
       mp.variant_id,
@@ -134,9 +134,31 @@ exports.deleteCartItem = async (cart_id) => {
 };
 
 // Increase stock (used when removing from cart)
-exports.increaseStock = async (product_id, qty) => {
+exports.increaseVariantStock = async (variant_id, qty) => {
   await db.query(
-    `UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?`,
-    [qty, product_id]
+    `UPDATE product_variants SET stock_qty = stock_qty + ? WHERE id = ?`,
+    [qty, variant_id]
   );
 };
+
+// Find today's cart row WITHOUT cart_id
+exports.findCartRowAnyDate = async (user_id, product_id, variant_id, multipack_id) => {
+  const [rows] = await db.query(
+    `SELECT * FROM cart 
+     WHERE user_id = ?
+       AND product_id = ?
+       AND (variant_id = ? OR (? IS NULL AND variant_id IS NULL))
+       AND (multipack_id = ? OR (? IS NULL AND multipack_id IS NULL))
+     ORDER BY id DESC
+     LIMIT 1`,
+    [
+      user_id,
+      product_id,
+      variant_id, variant_id,
+      multipack_id, multipack_id
+    ]
+  );
+  return rows[0];
+};
+
+

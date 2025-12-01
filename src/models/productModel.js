@@ -2,8 +2,8 @@ const db = require("../config/db");
 
 exports.createProduct = async (data) => {
   const sql = `INSERT INTO products 
-  (product_name, product_category, product_description, product_type, product_img, stock_qty, mfg_date, exp_date) 
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  (product_name, product_category, product_description, product_type, product_img, mfg_date, exp_date) 
+  VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
   const [result] = await db.query(sql, [
     data.product_name,
@@ -11,7 +11,7 @@ exports.createProduct = async (data) => {
     data.product_description,
     data.product_type,
     data.product_img,
-    data.stock_qty,
+    // data.stock_qty,
     data.mfg_date,
     data.exp_date,
   ]);
@@ -45,7 +45,7 @@ exports.getProductsWithVariants = async () => {
       p.product_description,
       p.product_type,
       p.product_img,
-      p.stock_qty,            
+                 
       p.mfg_date,            
       p.exp_date,
       v.id as variant_id,
@@ -53,7 +53,8 @@ exports.getProductsWithVariants = async () => {
       v.quantity_value,
       v.actual_price,
       v.discount_percent,
-      v.discounted_price
+      v.discounted_price,
+      v.stock_qty AS stock_qty
     FROM products p
     LEFT JOIN product_variants v ON p.id = v.product_id
   `);
@@ -66,6 +67,7 @@ exports.getProductsWithVariants = async () => {
       m.id as multipack_id,
       v.quantity_value AS base_quantity_value,
       v.quantity_type AS base_quantity_type,
+       v.stock_qty AS stock_qty,  
       m.pack_quantity,
       (v.quantity_value * m.pack_quantity) AS total_quantity_value,
       m.total_actual_price,
@@ -114,7 +116,7 @@ exports.deleteProduct = async (id) => {
 exports.updateProduct = async (id, data) => {
   const sql = `
     UPDATE products 
-    SET product_name=?, product_category=?, product_description=?, product_type=?, product_img=?, stock_qty = ?, mfg_date = ?, exp_date = ?
+    SET product_name=?, product_category=?, product_description=?, product_type=?, product_img=?, mfg_date = ?, exp_date = ?
     WHERE id=?
   `;
   const params = [
@@ -125,7 +127,7 @@ exports.updateProduct = async (id, data) => {
     // data.quantity_type,
     // data.quantity_value,
     data.product_img,
-    data.stock_qty,
+    // data.stock_qty,
     data.mfg_date,
     data.exp_date,
     // data.actual_price,

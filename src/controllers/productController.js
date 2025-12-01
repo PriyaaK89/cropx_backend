@@ -18,7 +18,7 @@ exports.addProduct = async (req, res) => {
       product_category,
       product_description,
       product_type,
-      stock_qty,
+      // stock_qty,
       mfg_date,
       exp_date,
     } = req.body;
@@ -47,7 +47,7 @@ exports.addProduct = async (req, res) => {
       product_description,
       product_type,
       product_img: imageUrl,
-      stock_qty,
+      // stock_qty,
       mfg_date,
       exp_date,
     };
@@ -94,7 +94,7 @@ exports.getProducts = async (req, res) => {
           product_description: variant.product_description,
           product_type: variant.product_type,
           product_img: variant.product_img,
-          stock_qty: variant.stock_qty,
+          // stock_qty: variant.stock_qty,
           mfg_date: variant.mfg_date,
           exp_date: variant.exp_date,
           single_packs: [],
@@ -110,6 +110,7 @@ exports.getProducts = async (req, res) => {
         actual_price: variant.actual_price,
         discount_percent: variant.discount_percent,
         discounted_price: variant.discounted_price,
+        stock_qty: variant.stock_qty
       });
 
       return acc;
@@ -214,7 +215,7 @@ exports.UpdateProducts = async (req, res) => {
       product_category,
       product_description,
       product_type,
-      stock_qty,
+      // stock_qty,
       mfg_date,
       exp_date,
       // quantity_type,
@@ -252,7 +253,7 @@ exports.UpdateProducts = async (req, res) => {
       product_category: product_category || product.product_category,
       product_description: product_description || product.product_description,
       product_type: product_type || product.product_type,
-      stock_qty: stock_qty || product.stock_qty,
+      // stock_qty: stock_qty || product.stock_qty,
       mfg_date: mfg_date || product.mfg_date,
       exp_date: exp_date || product.exp_date,
       // quantity_type: quantity_type || product.quantity_type,

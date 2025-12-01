@@ -19,7 +19,7 @@ function groupByProduct(singleRows = [], multiRows = []) {
         product_img: row.product_img,
         mfg_date: row.mfg_date,
         exp_date: row.exp_date,
-        stock_qty: row.stock_qty || 0,
+        // stock_qty: row.stock_qty || 0,
         single_packs: [],
         multi_packs: []
       };
@@ -54,7 +54,7 @@ function groupByProduct(singleRows = [], multiRows = []) {
         product_img: row.product_img,
         mfg_date: row.mfg_date,
         exp_date: row.exp_date,
-        stock_qty: row.stock_qty || 0,
+        // stock_qty: row.stock_qty || 0,
         single_packs: [],
         multi_packs: []
       };
@@ -64,10 +64,11 @@ function groupByProduct(singleRows = [], multiRows = []) {
       productMap[row.product_id].multi_packs.push({
         multipack_id: row.multipack_id,
         variant_id: row.variant_id,
-        base_quantity_value: row.base_quantity_value,     // correct column
+        base_quantity: row.base_pack,     // correct column
         base_quantity_type: row.base_quantity_type,       // correct column
         pack_quantity: row.pack_quantity,
         total_quantity_value: row.total_quantity_value,
+        quantity_type: row.quantity_type,
         total_actual_price: row.total_actual_price,
         discount_percentage: row.discount_percentage,
         total_discounted_price: row.total_discounted_price,
@@ -83,7 +84,15 @@ exports.getCartData = async (user_id) => {
   const singleRows = await cartModel.getSinglePackItems(user_id) || [];
   const multiRows = await cartModel.getMultiPackItems(user_id) || [];
 
-  return groupByProduct(singleRows, multiRows);
+  const totalItems =
+    [...singleRows, ...multiRows].reduce((sum, item) => sum + item.cart_quantity, 0);
+
+  const grouped = groupByProduct(singleRows, multiRows); 
+
+  return {
+    cart_items: totalItems,   
+    cart: grouped             
+  };
 };
 
 

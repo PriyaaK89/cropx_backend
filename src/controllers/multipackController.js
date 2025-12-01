@@ -9,7 +9,7 @@ exports.addMultipack = async (req, res) => {
       product_id,
       variant_id,
       pack_quantity,
-      unit_price,              // ✅ renamed from total_actual_price
+      unit_price,              //  renamed from total_actual_price
       discount_percentage,
     } = req.body;
 
@@ -17,7 +17,7 @@ exports.addMultipack = async (req, res) => {
       !product_id ||
       !variant_id ||
       !pack_quantity ||
-      !unit_price ||          // ✅ updated check
+      !unit_price ||          //  updated check
       discount_percentage === undefined
     ) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -34,7 +34,7 @@ exports.addMultipack = async (req, res) => {
     const base_pack = variant.quantity_value;
     const total_quantity_value = base_pack * pack_quantity;
 
-    // ✅ updated to use unit_price
+    //  updated to use unit_price
     const total_actual_price = unit_price * pack_quantity;
 
     const total_discounted_price =
@@ -43,7 +43,7 @@ exports.addMultipack = async (req, res) => {
     const data = {
       product_id,
       variant_id,
-      unit_price,                 // ✅ added
+      unit_price,                 //  added
       pack_quantity,
       base_pack,
       total_quantity_value,
