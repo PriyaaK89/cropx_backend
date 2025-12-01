@@ -4,7 +4,7 @@ const {addToCart, getCartItems, removeSingleItem, removeWholeItem} = require("..
 
 router.post("/add-item", addToCart);
 router.get("/:user_id", getCartItems);
-router.post("/remove-item",removeSingleItem);
+router.post("/decrease-quanity",removeSingleItem);
 router.post("/remove-all-items", removeWholeItem);
 
 

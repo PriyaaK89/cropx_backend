@@ -7,8 +7,8 @@ exports.createVariant = async (data) => {
 
   const sql = `
     INSERT INTO product_variants 
-    (product_id, product_type, quantity_type, quantity_value, actual_price, discount_percent, discounted_price)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    (product_id, product_type, quantity_type, quantity_value, actual_price, discount_percent, discounted_price, stock_qty)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const [result] = await db.query(sql, [
@@ -18,7 +18,8 @@ exports.createVariant = async (data) => {
     data.quantity_value,
     data.actual_price,
     data.discount_percent,
-    discounted_price
+    discounted_price,
+    data.stock_qty || 0 
   ]);
 
   return result;
@@ -34,7 +35,8 @@ exports.getVariantsByProduct = async (product_id) => {
       v.quantity_type AS base_quantity_type,
       v.actual_price AS total_actual_price,
       v.discounted_price AS total_discounted_price,
-      v.discount_percent
+      v.discount_percent,
+       v.stock_qty AS stock_qty
     FROM product_variants v
     WHERE v.product_id = ?
   `, [product_id]);
@@ -46,6 +48,7 @@ exports.getVariantsByProduct = async (product_id) => {
       m.variant_id,
       v.quantity_value AS base_quantity_value,
       v.quantity_type AS base_quantity_type,
+       v.stock_qty AS stock_qty, 
       m.pack_quantity,
       m.total_quantity_value,
       m.total_actual_price,
@@ -85,7 +88,8 @@ exports.updateVariant = async (id, data) => {
       quantity_value = ?, 
       actual_price = ?, 
       discount_percent = ?, 
-      discounted_price = ?
+      discounted_price = ?,
+      stock_qty = ?
     WHERE id = ?
   `;
 
@@ -97,6 +101,7 @@ exports.updateVariant = async (id, data) => {
     data.actual_price,
     data.discount_percent,
     discounted_price,
+    data.stock_qty,
     id,
   ];
 

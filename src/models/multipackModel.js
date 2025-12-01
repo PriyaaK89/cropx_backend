@@ -12,10 +12,10 @@ exports.createMultipack = async (data) => {
   const pack_quantity = Number(data.pack_quantity) || 1;
   const discount_percentage = Number(data.discount_percentage) || 0;
 
-  // ✅ Price per unit (can come from user or variant)
+  //  Price per unit (can come from user or variant)
   const unit_price = Number(data.unit_price) || Number(variant.actual_price);
 
-  // ✅ Total = unit_price * pack_quantity
+  //  Total = unit_price * pack_quantity
   const total_actual_price = unit_price * pack_quantity;
 
   const total_discounted_price =
@@ -60,57 +60,51 @@ exports.createMultipack = async (data) => {
 };
 
 
+// exports.getMultipacksByVariant = async (variant_id) => {
+//   const sql = `
+//     SELECT 
+//       id AS multipack_id,
+//       pack_quantity,
+//       unit_price,
+//       total_quantity_value,
+//       quantity_type,
+//       total_actual_price,
+//       discount_percentage,
+//       (total_actual_price - (total_actual_price * discount_percentage / 100)) AS total_discounted_price,
+//     FROM product_multipacks
+//     WHERE variant_id = ?
+//   `;
+//   const [rows] = await db.query(sql, [variant_id]);
+//   return rows;
+// };
+
 exports.getMultipacksByVariant = async (variant_id) => {
   const sql = `
     SELECT 
-      id AS multipack_id,
-      pack_quantity,
-      unit_price,
-      total_quantity_value,
-      quantity_type,
-      total_actual_price,
-      discount_percentage,
-      (total_actual_price - (total_actual_price * discount_percentage / 100)) AS total_discounted_price
-    FROM product_multipacks
-    WHERE variant_id = ?
+      m.id AS multipack_id,
+      m.pack_quantity,
+      m.unit_price,
+      m.total_quantity_value,
+      m.quantity_type,
+      m.total_actual_price,
+      m.discount_percentage,
+      (m.total_actual_price - (m.total_actual_price * m.discount_percentage / 100)) AS total_discounted_price,
+      v.stock_qty AS stock_qty        
+    FROM product_multipacks m
+    JOIN product_variants v ON m.variant_id = v.id
+    WHERE m.variant_id = ?
   `;
+
   const [rows] = await db.query(sql, [variant_id]);
   return rows;
 };
 
-// ✅ Update existing multipack
-// exports.updateMultipack = async (id, data) => {
-//   const sql = `
-//     UPDATE product_multipacks 
-//     SET 
-//       pack_quantity = ?, 
-//       total_quantity_value = ?, 
-//       quantity_type = ?, 
-//       total_actual_price = ?, 
-//       discount_percentage = ?, 
-//       total_discounted_price = ?
-//     WHERE id = ?
-//   `;
-
-//   const [result] = await db.query(sql, [
-//     data.pack_quantity,
-//     data.total_quantity_value,
-//     data.quantity_type,
-//     data.total_actual_price,
-//     data.discount_percentage,
-//     data.total_discounted_price,
-//     id
-//   ]);
-
-//   return result;
-// };
-
 exports.updateMultipack = async (id, data) => {
   const pack_quantity = Number(data.pack_quantity) || 1;
-  const unit_price = Number(data.unit_price) || 0; // ✅ fixed: use unit_price, not total_actual_price
+  const unit_price = Number(data.unit_price) || 0; // fixed: use unit_price, not total_actual_price
   const discount_percentage = Number(data.discount_percentage) || 0;
 
-  // ✅ Recalculate total price based on unit price and quantity
+  //  Recalculate total price based on unit price and quantity
   const total_actual_price = unit_price * pack_quantity;
   const total_discounted_price =
     total_actual_price - (total_actual_price * discount_percentage) / 100;
@@ -118,7 +112,7 @@ exports.updateMultipack = async (id, data) => {
   const sql = `
     UPDATE product_multipacks 
     SET 
-      unit_price = ?,               -- ✅ new field
+      unit_price = ?,               --  new field
       base_pack = ?, 
       pack_quantity = ?, 
       total_quantity_value = ?, 
@@ -130,7 +124,7 @@ exports.updateMultipack = async (id, data) => {
   `;
 
   const [result] = await db.query(sql, [
-    unit_price,                              // ✅ added
+    unit_price,                              //  added
     data.base_pack || "1",
     pack_quantity,
     data.total_quantity_value || pack_quantity,
