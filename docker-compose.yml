@@ -8,12 +8,12 @@ services:
     depends_on:
       - mysql
     environment:
-    - DB_HOST=mysql
-    - DB_USER=root
-    - DB_PASS=sqlroot1238
-    - DB_NAME=cropx_db
-    - DB_PORT=3306
-  restart: always
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASS=sqlroot1238
+      - DB_NAME=cropx_db
+      - DB_PORT=3306
+    restart: always   # <-- move inside backend
 
   mysql:
     image: mysql:8
