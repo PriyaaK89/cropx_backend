@@ -36,20 +36,9 @@
    
   "main": "server.js",
    
-  "scripts": {
-   
-     
-  "dev": "node dotenv/config index.js dotenv_config_path=env",
-   
-     
-  "test": "echo \"Error : no test specified\"&& exit 1",
-   
-     
-  "start": "npx nodemon server.js",
-   
-     
-  "build": "npm i"
-   
+"scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
   },
    
   "author": "",
