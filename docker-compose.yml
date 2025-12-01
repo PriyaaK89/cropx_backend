@@ -4,20 +4,16 @@ services:
     build: .
     container_name: backend
     ports:
-      - "3000:3000" 
+      - "3000:3000"
     depends_on:
       - mysql
-    environment:
-      - DB_HOST=mysql
-      - DB_USER=root
-      - DB_PASS=sqlroot1238
-      - DB_NAME=cropx_db
-      - DB_PORT=3306
-    restart: always   # <-- move inside backend
+    env_file:
+      - .env
+    restart: always
 
   mysql:
     image: mysql:8
-    container_name: mysql-db
+    container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: sqlroot1238
       MYSQL_DATABASE: cropx_db
