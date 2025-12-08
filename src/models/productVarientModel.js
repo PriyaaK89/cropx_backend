@@ -33,8 +33,8 @@ exports.getVariantsByProduct = async (product_id) => {
       v.product_id,
       v.quantity_value AS base_quantity_value,
       v.quantity_type AS base_quantity_type,
-      v.actual_price AS total_actual_price,
-      v.discounted_price AS total_discounted_price,
+      v.actual_price AS actual_price,
+      v.discounted_price AS discounted_price,
       v.discount_percent,
        v.stock_qty AS stock_qty
     FROM product_variants v
@@ -51,8 +51,8 @@ exports.getVariantsByProduct = async (product_id) => {
        v.stock_qty AS stock_qty, 
       m.pack_quantity,
       m.total_quantity_value,
-      m.total_actual_price,
-      m.total_discounted_price,
+      m.actual_price,
+      m.discounted_price,
       m.discount_percentage
     FROM product_multipacks m
     JOIN product_variants v ON m.variant_id = v.id

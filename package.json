@@ -38,7 +38,7 @@
    
 "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "npx nodemon server.js"
   },
    
   "author": "",

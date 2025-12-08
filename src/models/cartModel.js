@@ -22,10 +22,11 @@ exports.updateQuantity = async (cartId, quantity) => {
   );
 };
 
+
 // ADD NEW CART ROW
 exports.addCartItem = async (user_id, product_id, variant_id, multipack_id, quantity) => {
   await db.query(
-    `INSERT INTO cart (user_id, product_id, variant_id, multipack_id, quantity)
+    `INSERT INTO cart (user_id, product_id, variant_id, multipack_id, quantity )
      VALUES (?, ?, ?, ?, ?)`,
     [user_id, product_id, variant_id, multipack_id, quantity]
   );
@@ -55,8 +56,9 @@ exports.getSinglePackItems = async (user_id) => {
       v.quantity_value,
       v.actual_price,
       v.discount_percent,
-      v.discounted_price
+      v.discounted_price,
 
+      (v.discounted_price * c.quantity) AS total_price
     FROM cart c
     LEFT JOIN products p ON c.product_id = p.id
     LEFT JOIN product_variants v ON c.variant_id = v.id
@@ -94,9 +96,10 @@ exports.getMultiPackItems = async (user_id) => {
       mp.pack_quantity,
       mp.total_quantity_value,
       mp.quantity_type,
-      mp.total_actual_price,
+      mp.actual_price,
       mp.discount_percentage,
-      mp.total_discounted_price
+      mp.discounted_price,
+       (mp.discounted_price * c.quantity) AS total_price
 
     FROM cart c
     LEFT JOIN products p ON c.product_id = p.id
@@ -127,6 +130,8 @@ exports.decreaseQuantity = async (cart_id) => {
     [cart_id]
   );
 };
+
+
 
 // Delete full row
 exports.deleteCartItem = async (cart_id) => {

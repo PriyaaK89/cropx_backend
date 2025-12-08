@@ -9,7 +9,7 @@ exports.addMultipack = async (req, res) => {
       product_id,
       variant_id,
       pack_quantity,
-      unit_price,              //  renamed from total_actual_price
+      unit_price,              //  renamed from actual_price
       discount_percentage,
     } = req.body;
 
@@ -35,10 +35,10 @@ exports.addMultipack = async (req, res) => {
     const total_quantity_value = base_pack * pack_quantity;
 
     //  updated to use unit_price
-    const total_actual_price = unit_price * pack_quantity;
+    const actual_price = unit_price * pack_quantity;
 
-    const total_discounted_price =
-      total_actual_price - (total_actual_price * discount_percentage) / 100;
+    const discounted_price =
+      actual_price - (actual_price * discount_percentage) / 100;
 
     const data = {
       product_id,
@@ -48,9 +48,9 @@ exports.addMultipack = async (req, res) => {
       base_pack,
       total_quantity_value,
       quantity_type: variant.quantity_type,
-      total_actual_price,
+      actual_price,
       discount_percentage,
-      total_discounted_price,
+      discounted_price,
     };
 
     const result = await createMultipack(data);
@@ -82,9 +82,9 @@ exports.updateMultipack = async (req, res) => {
     const total_quantity_value = variant.quantity_value * pack_quantity;
 
     // use unit_price for total calculation
-    const total_actual_price = unit_price * pack_quantity;
-    const total_discounted_price =
-      total_actual_price - (total_actual_price * discount_percentage) / 100;
+    const actual_price = unit_price * pack_quantity;
+    const discounted_price =
+      actual_price - (actual_price * discount_percentage) / 100;
 
     const data = {
       product_id,
@@ -93,9 +93,9 @@ exports.updateMultipack = async (req, res) => {
       base_pack: variant.quantity_value,
       total_quantity_value,
       quantity_type: variant.quantity_type,
-      total_actual_price,
+      actual_price,
       discount_percentage,
-      total_discounted_price,
+      discounted_price,
     };
 
     const result = await updateMultipack(id, data);
