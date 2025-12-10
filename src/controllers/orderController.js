@@ -59,18 +59,18 @@ exports.placeOrder = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment method" });
     }
 
-    // ✅ 1. Fetch Cart
+    //  1. Fetch Cart
     const cartData = await CartService.getCartData(user_id);
     if (!cartData || cartData.cart_items === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    // ✅ 2. Amount Calculation
+    //  2. Amount Calculation
     const subtotal = cartData.price_summary.subtotal;
     const delivery_fee = subtotal < 500 ? 70 : 0;
     const total_amount = subtotal + delivery_fee;
 
-    // ✅ 3. Payment Logic
+    //  3. Payment Logic
     let payment_status = "PENDING";
     let fake_transaction_id = null;
 
@@ -79,7 +79,7 @@ exports.placeOrder = async (req, res) => {
       fake_transaction_id = "FAKE_TXN_" + Date.now();
     }
 
-    // ✅ 4. Create Order
+    //  4. Create Order
     const order_id = await Order.createOrder({
       user_id,
       address_id,
@@ -92,7 +92,7 @@ exports.placeOrder = async (req, res) => {
       order_status: "PLACED"
     }, connection);
 
-    // ✅ 5. Insert Order Items + Reduce Stock (CORRECT GROUPED LOOP)
+    //  5. Insert Order Items + Reduce Stock (CORRECT GROUPED LOOP)
     for (let product of cartData.cart) {
 
       // -------- SINGLE PACK ITEMS --------
@@ -111,7 +111,7 @@ exports.placeOrder = async (req, res) => {
           total_price
         }, connection);
 
-        // ✅ Reduce stock (single)
+        //  Reduce stock (single)
         await connection.query(
           `UPDATE product_variants SET stock_qty = stock_qty - ? WHERE id = ?`,
           [quantity, item.variant_id]
@@ -134,7 +134,7 @@ exports.placeOrder = async (req, res) => {
           total_price
         }, connection);
 
-        // ✅ Reduce stock (multipack)
+        //  Reduce stock (multipack)
         const totalQty = item.pack_quantity * quantity;
 
         await connection.query(
@@ -144,7 +144,7 @@ exports.placeOrder = async (req, res) => {
       }
     }
 
-    // ✅ 6. Clear User Cart
+    //  6. Clear User Cart
     await Order.clearUserCart(user_id, connection);
 
     await connection.commit();
