@@ -27,13 +27,15 @@ function groupByProduct(singleRows = [], multiRows = []) {
 
     if (row.variant_id) {
       productMap[row.product_id].single_packs.push({
+        cart_item_id: row.cart_id,
         variant_id: row.variant_id,
         quantity_value: row.quantity_value,
         quantity_type: row.quantity_type,
         actual_price: row.actual_price,
         discount_percent: row.discount_percent,
         discounted_price: row.discounted_price,
-        cart_quantity: row.cart_quantity
+        cart_quantity: row.cart_quantity,
+        total_price: row.total_price
       });
     }
   }
@@ -62,6 +64,7 @@ function groupByProduct(singleRows = [], multiRows = []) {
 
     if (row.multipack_id) {
       productMap[row.product_id].multi_packs.push({
+        cart_item_id: row.cart_id,
         multipack_id: row.multipack_id,
         variant_id: row.variant_id,
         base_quantity: row.base_pack,     // correct column
@@ -69,10 +72,11 @@ function groupByProduct(singleRows = [], multiRows = []) {
         pack_quantity: row.pack_quantity,
         total_quantity_value: row.total_quantity_value,
         quantity_type: row.quantity_type,
-        total_actual_price: row.total_actual_price,
+        actual_price: row.actual_price,
         discount_percentage: row.discount_percentage,
-        total_discounted_price: row.total_discounted_price,
-        cart_quantity: row.cart_quantity
+        discounted_price: row.discounted_price,
+        cart_quantity: row.cart_quantity,
+        total_price: row.total_price
       });
     }
   }
@@ -80,19 +84,34 @@ function groupByProduct(singleRows = [], multiRows = []) {
   return Object.values(productMap);
 }
 
+
+
+
 exports.getCartData = async (user_id) => {
   const singleRows = await cartModel.getSinglePackItems(user_id) || [];
   const multiRows = await cartModel.getMultiPackItems(user_id) || [];
 
-  const totalItems =
-    [...singleRows, ...multiRows].reduce((sum, item) => sum + item.cart_quantity, 0);
+  const subtotal = [...singleRows, ...multiRows].reduce(
+    (sum, item) => sum + Number(item.total_price),
+    0
+  );
 
-  const grouped = groupByProduct(singleRows, multiRows); 
+  const delivery_fee = subtotal > 500 ? 0 : 70;
+  const gst = 0; // optional
+  const grand_total = subtotal + delivery_fee + gst;
+
+  const grouped = groupByProduct(singleRows, multiRows);
 
   return {
-    cart_items: totalItems,   
-    cart: grouped             
+    cart_items: [...singleRows, ...multiRows].reduce((sum, item) => sum + item.cart_quantity, 0),
+
+    price_summary: {
+      subtotal,
+      gst,
+      delivery_fee,
+      grand_total
+    },
+
+    cart: grouped
   };
 };
-
-

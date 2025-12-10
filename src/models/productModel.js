@@ -36,7 +36,7 @@ exports.getProductbyId = async (id) => {
 };
 
 exports.getProductsWithVariants = async () => {
-  // 1️⃣ Fetch all variants (single packs)
+  //  Fetch all variants (single packs)
   const [variants] = await db.query(`
     SELECT
       p.id as product_id,
@@ -70,8 +70,8 @@ exports.getProductsWithVariants = async () => {
        v.stock_qty AS stock_qty,  
       m.pack_quantity,
       (v.quantity_value * m.pack_quantity) AS total_quantity_value,
-      m.total_actual_price,
-      m.total_discounted_price
+      m.actual_price,
+      m.discounted_price
     FROM products p
     LEFT JOIN product_variants v ON p.id = v.product_id
     LEFT JOIN product_multipacks m ON v.id = m.variant_id
@@ -98,8 +98,8 @@ exports.getProductsWithVariants = async () => {
 //         (v.quantity_value * m.pack_quantity), ' ', v.quantity_type,
 //         ' (pack of ', v.quantity_value, ' ', v.quantity_type, ' × ', m.pack_quantity, ')'
 //       ) AS display_name,
-//       m.total_actual_price,
-//       m.total_discounted_price
+//       m.actual_price,
+//       m.discounted_price
 //     FROM product_variants v
 //     LEFT JOIN product_multipacks m ON v.id = m.variant_id
 //     WHERE v.product_id = ?

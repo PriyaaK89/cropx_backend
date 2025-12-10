@@ -3,29 +3,60 @@ const path = require("path");
 const imgbbService = require("../service/ImgbbService");
 const { UploadBanner, getBanner, deleteBanner } = require("../models/bannerModel");
 
-exports.uploadBanner = async(req, res)=>{
-  try{
-    if(!req.file) return res.status(400).json({message:"Banner image is required"});
+// exports.uploadBanner = async(req, res)=>{
+//   try{
+//     if(!req.file) return res.status(400).json({message:"Banner image is required"});
+
+//     const filePath = path.resolve(req.file.path);
+//     const base64 = fs.readFileSync(filePath, {encoding:"base64"});
+
+//     const imageUrl = await imgbbService.uploadToImgBB(base64, req.file.originalname);
+
+//     fs.unlinkSync(filePath);
+
+//     const result = await UploadBanner(imageUrl);
+
+//     return res.status(201).json({
+//       success:true,
+//       message:"Banner uploaded successfully",
+//       id: result.insertId,
+//       banner_image: imageUrl
+//     });
+
+//   }catch(error){
+//     console.log(error);
+//     return res.status(500).json({message:"Something went wrong"});
+//   }
+// };
+
+
+exports.uploadBanner = async (req, res) => {
+  try {
+    if (!req.file)
+      return res.status(400).json({ message: "Banner image is required" });
 
     const filePath = path.resolve(req.file.path);
-    const base64 = fs.readFileSync(filePath, {encoding:"base64"});
 
-    const imageUrl = await imgbbService.uploadToImgBB(base64, req.file.originalname);
+    const fileBuffer = fs.readFileSync(filePath); //  NO BASE64
+
+    const imageUrl = await imgbbService.uploadToImgBB(
+      fileBuffer,
+      req.file.originalname
+    );
 
     fs.unlinkSync(filePath);
 
     const result = await UploadBanner(imageUrl);
 
     return res.status(201).json({
-      success:true,
-      message:"Banner uploaded successfully",
+      success: true,
+      message: "Banner uploaded successfully",
       id: result.insertId,
-      banner_image: imageUrl
+      banner_image: imageUrl,
     });
-
-  }catch(error){
+  } catch (error) {
     console.log(error);
-    return res.status(500).json({message:"Something went wrong"});
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };
 

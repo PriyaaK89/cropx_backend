@@ -16,14 +16,14 @@ exports.createMultipack = async (data) => {
   const unit_price = Number(data.unit_price) || Number(variant.actual_price);
 
   //  Total = unit_price * pack_quantity
-  const total_actual_price = unit_price * pack_quantity;
+  const actual_price = unit_price * pack_quantity;
 
-  const total_discounted_price =
-    total_actual_price - (total_actual_price * discount_percentage) / 100;
+  const discounted_price =
+    actual_price - (actual_price * discount_percentage) / 100;
 
   const sql = `
     INSERT INTO product_multipacks 
-    (product_id, variant_id, unit_price, base_pack, pack_quantity, total_quantity_value, quantity_type, total_actual_price, discount_percentage, total_discounted_price)
+    (product_id, variant_id, unit_price, base_pack, pack_quantity, total_quantity_value, quantity_type, actual_price, discount_percentage, discounted_price)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
@@ -35,9 +35,9 @@ exports.createMultipack = async (data) => {
     pack_quantity,
     data.total_quantity_value || pack_quantity,
     data.quantity_type || "unit",
-    total_actual_price,
+    actual_price,
     discount_percentage,
-    total_discounted_price,
+    discounted_price,
   ]);
 
   return {
@@ -52,9 +52,9 @@ exports.createMultipack = async (data) => {
       total_quantity_value: data.total_quantity_value || pack_quantity,
       quantity_type: data.quantity_type || "unit",
       unit_price,                   
-      total_actual_price,
+      actual_price,
       discount_percentage,
-      total_discounted_price,
+      discounted_price,
     },
   };
 };
@@ -68,9 +68,9 @@ exports.createMultipack = async (data) => {
 //       unit_price,
 //       total_quantity_value,
 //       quantity_type,
-//       total_actual_price,
+//       actual_price,
 //       discount_percentage,
-//       (total_actual_price - (total_actual_price * discount_percentage / 100)) AS total_discounted_price,
+//       (actual_price - (actual_price * discount_percentage / 100)) AS discounted_price,
 //     FROM product_multipacks
 //     WHERE variant_id = ?
 //   `;
@@ -86,9 +86,9 @@ exports.getMultipacksByVariant = async (variant_id) => {
       m.unit_price,
       m.total_quantity_value,
       m.quantity_type,
-      m.total_actual_price,
+      m.actual_price,
       m.discount_percentage,
-      (m.total_actual_price - (m.total_actual_price * m.discount_percentage / 100)) AS total_discounted_price,
+      (m.actual_price - (m.actual_price * m.discount_percentage / 100)) AS discounted_price,
       v.stock_qty AS stock_qty        
     FROM product_multipacks m
     JOIN product_variants v ON m.variant_id = v.id
@@ -101,13 +101,13 @@ exports.getMultipacksByVariant = async (variant_id) => {
 
 exports.updateMultipack = async (id, data) => {
   const pack_quantity = Number(data.pack_quantity) || 1;
-  const unit_price = Number(data.unit_price) || 0; // fixed: use unit_price, not total_actual_price
+  const unit_price = Number(data.unit_price) || 0; // fixed: use unit_price, not actual_price
   const discount_percentage = Number(data.discount_percentage) || 0;
 
   //  Recalculate total price based on unit price and quantity
-  const total_actual_price = unit_price * pack_quantity;
-  const total_discounted_price =
-    total_actual_price - (total_actual_price * discount_percentage) / 100;
+  const actual_price = unit_price * pack_quantity;
+  const discounted_price =
+    actual_price - (actual_price * discount_percentage) / 100;
 
   const sql = `
     UPDATE product_multipacks 
@@ -117,9 +117,9 @@ exports.updateMultipack = async (id, data) => {
       pack_quantity = ?, 
       total_quantity_value = ?, 
       quantity_type = ?, 
-      total_actual_price = ?, 
+      actual_price = ?, 
       discount_percentage = ?, 
-      total_discounted_price = ?
+      discounted_price = ?
     WHERE id = ?
   `;
 
@@ -129,9 +129,9 @@ exports.updateMultipack = async (id, data) => {
     pack_quantity,
     data.total_quantity_value || pack_quantity,
     data.quantity_type || "unit",
-    total_actual_price,
+    actual_price,
     discount_percentage,
-    total_discounted_price,
+    discounted_price,
     id,
   ]);
 
@@ -142,9 +142,9 @@ exports.updateMultipack = async (id, data) => {
     data: {
       unit_price,
       pack_quantity,
-      total_actual_price,
+      actual_price,
       discount_percentage,
-      total_discounted_price,
+      discounted_price,
     },
   };
 };

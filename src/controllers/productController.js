@@ -80,10 +80,10 @@ exports.getProducts = async (req, res) => {
     limit = parseInt(limit);
     const startIndex = (page - 1) * limit;
 
-    // 1️⃣ Fetch all products with variants + multipacks
+    // Fetch all products with variants + multipacks
     const { variants, multipacks } = await getProductsWithVariants();
 
-    // 2️⃣ Format products
+    // Format products
     const finalData = variants.reduce((acc, variant) => {
       let product = acc.find((p) => p.id === variant.product_id);
       if (!product) {
@@ -116,7 +116,7 @@ exports.getProducts = async (req, res) => {
       return acc;
     }, []);
 
-    // 3️⃣ Add multipacks
+    //  Add multipacks
     multipacks.forEach((mp) => {
       const product = finalData.find((p) => p.id === mp.product_id);
       if (product) {
@@ -127,13 +127,13 @@ exports.getProducts = async (req, res) => {
           base_quantity_type: mp.base_quantity_type,
           pack_quantity: mp.pack_quantity,
           total_quantity_value: mp.total_quantity_value,
-          total_actual_price: mp.total_actual_price,
-          total_discounted_price: mp.total_discounted_price,
+          actual_price: mp.actual_price,
+          discounted_price: mp.discounted_price,
         });
       }
     });
 
-    // 4️⃣ Add expiry status
+    //  Add expiry status
     const currentDate = new Date();
 
     finalData.forEach((product) => {
@@ -157,7 +157,7 @@ exports.getProducts = async (req, res) => {
       }
     });
 
-    // 5️⃣ Apply Filters
+    //  Apply Filters
     let filteredData = finalData;
 
     // Search filter (product_name)
@@ -185,7 +185,7 @@ exports.getProducts = async (req, res) => {
       );
     }
 
-    // 6️⃣ Pagination
+    //  Pagination
     const totalProducts = filteredData.length;
 
     const paginatedProducts = filteredData.slice(
@@ -326,12 +326,88 @@ exports.getProductsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
 
-    const products = await getProductsByCategoryModel(category);
+    //  Fetch variants + multipacks (same as getProducts)
+    const { variants, multipacks } = await getProductsWithVariants();
 
+    //  Build full product structure (same as getProducts)
+    const finalData = variants.reduce((acc, variant) => {
+      let product = acc.find((p) => p.id === variant.product_id);
+
+      if (!product) {
+        product = {
+          id: variant.product_id,
+          product_name: variant.product_name,
+          product_category: variant.product_category,
+          product_description: variant.product_description,
+          product_type: variant.product_type,
+          product_img: variant.product_img,
+          mfg_date: variant.mfg_date,
+          exp_date: variant.exp_date,
+          single_packs: [],
+          multi_packs: [],
+        };
+        acc.push(product);
+      }
+
+      product.single_packs.push({
+        variant_id: variant.variant_id,
+        quantity_value: variant.quantity_value,
+        quantity_type: variant.quantity_type,
+        actual_price: variant.actual_price,
+        discount_percent: variant.discount_percent,
+        discounted_price: variant.discounted_price,
+        stock_qty: variant.stock_qty,
+      });
+
+      return acc;
+    }, []);
+
+    //  Add multipacks (same as getProducts)
+    multipacks.forEach((mp) => {
+      const product = finalData.find((p) => p.id === mp.product_id);
+      if (product) {
+        product.multi_packs.push({
+          multipack_id: mp.multipack_id,
+          variant_id: mp.variant_id,
+          base_quantity_value: mp.base_quantity_value,
+          base_quantity_type: mp.base_quantity_type,
+          pack_quantity: mp.pack_quantity,
+          total_quantity_value: mp.total_quantity_value,
+          actual_price: mp.actual_price,
+          discounted_price: mp.discounted_price,
+        });
+      }
+    });
+
+    //  Add expiry status (same as getProducts)
+    const currentDate = new Date();
+    finalData.forEach((product) => {
+      if (product.exp_date) {
+        const expDate = new Date(product.exp_date);
+        const diffMonths =
+          (expDate.getFullYear() - currentDate.getFullYear()) * 12 +
+          (expDate.getMonth() - currentDate.getMonth());
+
+        if (diffMonths > 8) product.expiry_status = "Up to Date";
+        else if (diffMonths > 0 && diffMonths <= 3)
+          product.expiry_status = "Near Expiry";
+        else if (expDate < currentDate) product.expiry_status = "Expired";
+        else product.expiry_status = "Moderate";
+      } else {
+        product.expiry_status = "No Expiry Info";
+      }
+    });
+
+    //  FILTER BY CATEGORY ONLY
+    const filteredProducts = finalData.filter(
+      (p) => p.product_category.toLowerCase() === category.toLowerCase()
+    );
+
+    //  Send exact same response structure as GetProducts
     return res.status(200).json({
       success: true,
-      total: products.length,
-      data: products,
+      totalItems: filteredProducts.length,
+      data: filteredProducts,
     });
   } catch (error) {
     console.log("Error:", error);
@@ -341,3 +417,4 @@ exports.getProductsByCategory = async (req, res) => {
     });
   }
 };
+

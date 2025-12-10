@@ -12,6 +12,10 @@ const bannerRoute = require("./src/routes/bannerRoute");
 const productVarientRoute = require("./src/routes/productVarientRoute");
 const productDetailsRoute = require("./src/routes/productDetailsRoute");
 const cartRoute = require("./src/routes/cartRoute");
+const contactRoute = require("./src/routes/contactRoute");
+const deliveryAddressRoute = require("./src/routes/AddressRoute");
+const ordersRoute = require("./src/routes/orderRoute");
+const adminOrderRoute = require("./src/routes/adminOrderRoute");
 
 
 dotenv.config();
@@ -32,7 +36,11 @@ app.use("/banner", bannerRoute);
 app.use("/product", productVarientRoute);
 app.use("/product",productDetailsRoute);
 app.use("/cart", cartRoute);
-
+// console.log(contactRoute, "contactRoute");
+app.use("/api", contactRoute);
+app.use("/api", deliveryAddressRoute);
+app.use("/api", ordersRoute);
+app.use( adminOrderRoute);
 //  Test DB connection once
 (async () => {
   try {

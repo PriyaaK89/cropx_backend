@@ -44,7 +44,7 @@ exports.addToCart = async (req, res) => {
     }
 
     // ----------------------------------------
-    // 2️⃣ STOCK VALIDATION
+    //  STOCK VALIDATION
     // ----------------------------------------
     const requiredStock = quantity * packQty;
 
@@ -73,22 +73,21 @@ exports.addToCart = async (req, res) => {
     // ----------------------------------------
     //  REDUCE STOCK IN VARIANT TABLE (IMPORTANT)
     // ----------------------------------------
-    let variantIdToUpdate = variant_id;
+    // let variantIdToUpdate = variant_id;
 
-    if (multipack_id) {
-      // find which base variant this multipack belongs to
-      const [mp] = await db.query(
-        `SELECT variant_id FROM product_multipacks WHERE id = ?`,
-        [multipack_id]
-      );
+    // if (multipack_id) {
+    //   const [mp] = await db.query(
+    //     `SELECT variant_id FROM product_multipacks WHERE id = ?`,
+    //     [multipack_id]
+    //   );
 
-      variantIdToUpdate = mp[0].variant_id;
-    }
+    //   variantIdToUpdate = mp[0].variant_id;
+    // }
 
-    await db.query(
-      `UPDATE product_variants SET stock_qty = stock_qty - ? WHERE id = ?`,
-      [requiredStock, variantIdToUpdate]
-    );
+    // await db.query(
+    //   `UPDATE product_variants SET stock_qty = stock_qty - ? WHERE id = ?`,
+    //   [requiredStock, variantIdToUpdate]
+    // );
 
     // ----------------------------------------
     //  SUCCESS RESPONSE
