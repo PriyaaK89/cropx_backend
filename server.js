@@ -16,6 +16,7 @@ const contactRoute = require("./src/routes/contactRoute");
 const deliveryAddressRoute = require("./src/routes/AddressRoute");
 const ordersRoute = require("./src/routes/orderRoute");
 const adminOrderRoute = require("./src/routes/adminOrderRoute");
+const pincodeRoute = require("./src/routes/pincodeRoute")
 
 
 dotenv.config();
@@ -41,6 +42,7 @@ app.use("/api", contactRoute);
 app.use("/api", deliveryAddressRoute);
 app.use("/api", ordersRoute);
 app.use( adminOrderRoute);
+app.use( pincodeRoute);
 //  Test DB connection once
 (async () => {
   try {
@@ -58,4 +60,4 @@ app.get("/", (req, res) => {
 
 //  Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+app.listen(PORT,"0.0.0.0", () => console.log(` Server running on port ${PORT}`));
