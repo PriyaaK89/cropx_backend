@@ -328,3 +328,36 @@ exports.verifyPayment = async (req, res) => {
     res.status(500).json({ message: "Verification failed" });
   }
 };
+
+
+exports.getOrderDetailsById = async (req, res) => {
+  try {
+    const { order_id } = req.params;
+
+    if (!order_id) {
+      return res.status(400).json({ message: "order_id is required" });
+    }
+
+    const orderDetails = await Order.getOrderById(order_id);
+
+    if (!orderDetails) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // const orderItems = await Order.getOrderItems(order_id);
+
+    return res.status(200).json({
+      success: true,
+      order: orderDetails,
+      // items: orderItems
+    });
+
+  } catch (error) {
+    console.error("Get Order Details Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};
