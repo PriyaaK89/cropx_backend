@@ -1,7 +1,10 @@
 const CartService = require("../service/cartService");
 const Address = require("../models/addressModel");
 const Order = require("../models/orderModel");
-const db = require("../config/db")
+const db = require("../config/db");
+const crypto = require("crypto");
+const razorpay = require("../service/razorpay");
+
 
 exports.getOrderSummary = async (req, res) => {
   try {
@@ -47,8 +50,15 @@ exports.placeOrder = async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    const { user_id, address_id, payment_method } = req.body;
+    const { 
+      user_id, 
+      address_id, 
+      payment_method,
+      razorpay_payment_id,
+      razorpay_order_id
+    } = req.body;
 
+    // Validation
     if (!user_id || !address_id || !payment_method) {
       return res.status(400).json({
         message: "user_id, address_id, and payment_method are required"
@@ -59,27 +69,38 @@ exports.placeOrder = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment method" });
     }
 
-    //  1. Fetch Cart
+    // Fetch Cart
     const cartData = await CartService.getCartData(user_id);
     if (!cartData || cartData.cart_items === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    //  2. Amount Calculation
+    // Calculate Amounts
     const subtotal = cartData.price_summary.subtotal;
     const delivery_fee = subtotal < 500 ? 70 : 0;
     const total_amount = subtotal + delivery_fee;
 
-    //  3. Payment Logic
+    // -------------------------------
+    // PAYMENT HANDLING
+    // -------------------------------
     let payment_status = "PENDING";
-    let fake_transaction_id = null;
+    let payment_id = null;
 
+    // For ONLINE Payment → Razorpay details MUST be sent
     if (payment_method === "ONLINE") {
+      if (!razorpay_payment_id || !razorpay_order_id) {
+        return res.status(400).json({
+          message: "Missing razorpay_payment_id or razorpay_order_id"
+        });
+      }
+
       payment_status = "PAID";
-      fake_transaction_id = "FAKE_TXN_" + Date.now();
+      payment_id = razorpay_payment_id;
     }
 
-    //  4. Create Order
+    // -------------------------------
+    // CREATE ORDER
+    // -------------------------------
     const order_id = await Order.createOrder({
       user_id,
       address_id,
@@ -88,14 +109,16 @@ exports.placeOrder = async (req, res) => {
       total_amount,
       payment_method,
       payment_status,
-      fake_transaction_id,
+      payment_id,       // saving real payment id
       order_status: "PLACED"
     }, connection);
 
-    //  5. Insert Order Items + Reduce Stock (CORRECT GROUPED LOOP)
+    // -------------------------------
+    // CREATE ORDER ITEMS & STOCK REDUCTION
+    // -------------------------------
     for (let product of cartData.cart) {
 
-      // -------- SINGLE PACK ITEMS --------
+      // SINGLE PACK ITEMS
       for (let item of product.single_packs) {
         const quantity = item.cart_quantity;
         const price = item.discounted_price || item.actual_price;
@@ -111,14 +134,14 @@ exports.placeOrder = async (req, res) => {
           total_price
         }, connection);
 
-        //  Reduce stock (single)
+        // Reduce Stock
         await connection.query(
           `UPDATE product_variants SET stock_qty = stock_qty - ? WHERE id = ?`,
           [quantity, item.variant_id]
         );
       }
 
-      // -------- MULTI PACK ITEMS --------
+      // MULTIPACK ITEMS
       for (let item of product.multi_packs) {
         const quantity = item.cart_quantity;
         const price = item.discounted_price || item.actual_price;
@@ -134,7 +157,7 @@ exports.placeOrder = async (req, res) => {
           total_price
         }, connection);
 
-        //  Reduce stock (multipack)
+        // Reduce stock for multipack
         const totalQty = item.pack_quantity * quantity;
 
         await connection.query(
@@ -144,7 +167,7 @@ exports.placeOrder = async (req, res) => {
       }
     }
 
-    //  6. Clear User Cart
+    // CLEAR CART
     await Order.clearUserCart(user_id, connection);
 
     await connection.commit();
@@ -155,6 +178,7 @@ exports.placeOrder = async (req, res) => {
       order_id,
       payment_method,
       payment_status,
+      payment_id,
       total_amount
     });
 
@@ -171,6 +195,7 @@ exports.placeOrder = async (req, res) => {
     connection.release();
   }
 };
+
 
 
 exports.updateOrderStatus = async (req, res) => {
@@ -249,5 +274,90 @@ exports.updateOrderStatus = async (req, res) => {
     });
   } finally {
     connection.release();
+  }
+};
+
+exports.createRazorpayOrder = async (req, res) => {
+  try {
+    const { amount } = req.body; // amount in INR
+    
+    if (!amount) {
+      return res.status(400).json({ message: "Amount is required" });
+    }
+
+    const options = {
+      amount: amount * 100,   // convert to paisa
+      currency: "INR",
+      receipt: "rcpt_" + Date.now(),
+    };
+
+    const razorpayOrder = await razorpay
+    .orders.create(options);
+
+    return res.status(200).json({
+      success: true,
+      order_id: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+    });
+
+  } catch (error) {
+    console.error("Razorpay Order Error:", error);
+    return res.status(500).json({ message: "Failed to create Razorpay order" });
+  }
+};
+
+exports.verifyPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ success: false, message: "Payment verification failed" });
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Verify Error:", error);
+    res.status(500).json({ message: "Verification failed" });
+  }
+};
+
+
+exports.getOrderDetailsById = async (req, res) => {
+  try {
+    const { order_id } = req.params;
+
+    if (!order_id) {
+      return res.status(400).json({ message: "order_id is required" });
+    }
+
+    const orderDetails = await Order.getOrderById(order_id);
+
+    if (!orderDetails) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // const orderItems = await Order.getOrderItems(order_id);
+
+    return res.status(200).json({
+      success: true,
+      order: orderDetails,
+      // items: orderItems
+    });
+
+  } catch (error) {
+    console.error("Get Order Details Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
   }
 };

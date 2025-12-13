@@ -17,7 +17,6 @@ exports.saveAddress = async (req, res) => {
     }
 
     const result = await Address.userAddress(data);
-
     res.status(200).json({
       message: "Your Address saved successfully",
       data: result,
@@ -40,9 +39,7 @@ exports.getAddressByuser = async (req, res) => {
       success: true,
       data: result,
     });
-  } catch (error) {
-    res.status(500).json({ message: "Error in fetching Address", error });
-  }
+  } catch (error) { res.status(500).json({ message: "Error in fetching Address", error });}
 };
 
 exports.UpdateUserAddress = async (req, res) => {
