@@ -2,13 +2,14 @@ const db = require("../config/db");
 
 exports.createProduct = async (data) => {
   const sql = `INSERT INTO products 
-  (product_name, product_category, product_description, product_type, product_img, mfg_date, exp_date) 
-  VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  (product_name, product_category, product_description,brand, product_type, product_img, mfg_date, exp_date) 
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
   const [result] = await db.query(sql, [
     data.product_name,
     data.product_category,
     data.product_description,
+    data.brand,
     data.product_type,
     data.product_img,
     // data.stock_qty,
@@ -43,6 +44,7 @@ exports.getProductsWithVariants = async () => {
       p.product_name,
       p.product_category,
       p.product_description,
+      p.brand,
       p.product_type,
       p.product_img,
                  
@@ -116,13 +118,14 @@ exports.deleteProduct = async (id) => {
 exports.updateProduct = async (id, data) => {
   const sql = `
     UPDATE products 
-    SET product_name=?, product_category=?, product_description=?, product_type=?, product_img=?, mfg_date = ?, exp_date = ?
+    SET product_name=?, product_category=?, product_description=?, brand = ?,  product_type=?, product_img=?, mfg_date = ?, exp_date = ?
     WHERE id=?
   `;
   const params = [
     data.product_name,
     data.product_category,
     data.product_description,
+    data.brand,   
     data.product_type,
     // data.quantity_type,
     // data.quantity_value,
@@ -139,9 +142,9 @@ exports.updateProduct = async (id, data) => {
   return result;
 };
 
-exports.getProductsByCategoryModel = async (category) => {
-  const query = `SELECT * FROM products WHERE product_category = ?`;
+exports.getProductsByCategoryModel = async (category, brand) => {
+  const query = `SELECT * FROM products WHERE product_category = ? AND brand = ?`;
 
-  const [rows] = await db.query(query, [category]);
+  const [rows] = await db.query(query, [category, brand]);
   return rows;
 };

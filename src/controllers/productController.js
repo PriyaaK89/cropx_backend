@@ -17,13 +17,14 @@ exports.addProduct = async (req, res) => {
       product_name,
       product_category,
       product_description,
+      brand,
       product_type,
       // stock_qty,
       mfg_date,
       exp_date,
     } = req.body;
 
-    if (!product_name || !product_category || !product_type) {
+    if (!product_name || !product_category || !product_type || !brand) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -45,6 +46,7 @@ exports.addProduct = async (req, res) => {
       product_name,
       product_category,
       product_description,
+      brand,
       product_type,
       product_img: imageUrl,
       // stock_qty,
@@ -74,6 +76,7 @@ exports.getProducts = async (req, res) => {
       search = "",
       category = "",
       expiry_status = "",
+      brand = "",
     } = req.query;
 
     page = parseInt(page);
@@ -92,6 +95,7 @@ exports.getProducts = async (req, res) => {
           product_name: variant.product_name,
           product_category: variant.product_category,
           product_description: variant.product_description,
+          brand: variant.brand,
           product_type: variant.product_type,
           product_img: variant.product_img,
           // stock_qty: variant.stock_qty,
@@ -110,7 +114,7 @@ exports.getProducts = async (req, res) => {
         actual_price: variant.actual_price,
         discount_percent: variant.discount_percent,
         discounted_price: variant.discounted_price,
-        stock_qty: variant.stock_qty
+        stock_qty: variant.stock_qty,
       });
 
       return acc;
@@ -177,7 +181,11 @@ exports.getProducts = async (req, res) => {
         (p) => p.product_category.toLowerCase() === category.toLowerCase()
       );
     }
-
+    if (brand) {
+      filteredData = filteredData.filter(
+        (p) => p.brand?.toLowerCase() === brand.toLowerCase()
+      );
+    }
     // Expiry status filter
     if (expiry_status) {
       filteredData = filteredData.filter(
@@ -195,11 +203,11 @@ exports.getProducts = async (req, res) => {
 
     res.status(200).json({
       success: true,
-     page,
-    itemsPerPage: limit,
-    totalItems: totalProducts,
-    totalPages: Math.ceil(totalProducts / limit),
-    data: paginatedProducts,
+      page,
+      itemsPerPage: limit,
+      totalItems: totalProducts,
+      totalPages: Math.ceil(totalProducts / limit),
+      data: paginatedProducts,
     });
   } catch (error) {
     console.error("getProducts error:", error);
@@ -214,6 +222,7 @@ exports.UpdateProducts = async (req, res) => {
       product_name,
       product_category,
       product_description,
+      brand,
       product_type,
       // stock_qty,
       mfg_date,
@@ -252,6 +261,7 @@ exports.UpdateProducts = async (req, res) => {
       product_name: product_name || product.product_name,
       product_category: product_category || product.product_category,
       product_description: product_description || product.product_description,
+      brand: brand || product.brand,
       product_type: product_type || product.product_type,
       // stock_qty: stock_qty || product.stock_qty,
       mfg_date: mfg_date || product.mfg_date,
@@ -325,7 +335,7 @@ exports.getProductByID = async (req, res) => {
 exports.getProductsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
-
+    const { brand } = req.query;
     //  Fetch variants + multipacks (same as getProducts)
     const { variants, multipacks } = await getProductsWithVariants();
 
@@ -339,6 +349,7 @@ exports.getProductsByCategory = async (req, res) => {
           product_name: variant.product_name,
           product_category: variant.product_category,
           product_description: variant.product_description,
+          brand: variant.brand,
           product_type: variant.product_type,
           product_img: variant.product_img,
           mfg_date: variant.mfg_date,
@@ -399,9 +410,16 @@ exports.getProductsByCategory = async (req, res) => {
     });
 
     //  FILTER BY CATEGORY ONLY
-    const filteredProducts = finalData.filter(
-      (p) => p.product_category.toLowerCase() === category.toLowerCase()
-    );
+    const filteredProducts = finalData.filter((p) => {
+      const categoryMatch =
+        p.product_category.toLowerCase() === category.toLowerCase();
+
+      const brandMatch = brand
+        ? p.brand?.toLowerCase() === brand.toLowerCase()
+        : true;
+
+      return categoryMatch && brandMatch;
+    });
 
     //  Send exact same response structure as GetProducts
     return res.status(200).json({
@@ -417,4 +435,3 @@ exports.getProductsByCategory = async (req, res) => {
     });
   }
 };
-
