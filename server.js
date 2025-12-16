@@ -17,7 +17,9 @@ const deliveryAddressRoute = require("./src/routes/AddressRoute");
 const ordersRoute = require("./src/routes/orderRoute");
 const adminOrderRoute = require("./src/routes/adminOrderRoute");
 const pincodeRoute = require("./src/routes/pincodeRoute");
-const searchRoute = require("./src/routes/searchRoute")
+const searchRoute = require("./src/routes/searchRoute");
+const menuRoute = require("./src/routes/menuRoute");
+const rateRoute = require("./src/routes/ratingRoute");
 
 
 dotenv.config();
@@ -45,6 +47,9 @@ app.use("/api", ordersRoute);
 app.use( adminOrderRoute);
 app.use( pincodeRoute);
 app.use("/api", searchRoute);
+app.use(menuRoute);
+app.use(rateRoute);
+
 //  Test DB connection once
 (async () => {
   try {

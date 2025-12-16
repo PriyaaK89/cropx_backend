@@ -17,7 +17,8 @@ exports.getAllOrders = async () => {
       o.payment_method,
       o.payment_status,
       o.order_status,
-      o.created_at
+      o.created_at,
+      o.delivered_at
 
     FROM orders o
     JOIN users u ON u.id = o.user_id

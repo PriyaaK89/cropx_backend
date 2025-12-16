@@ -17,14 +17,14 @@ exports.addProduct = async (req, res) => {
       product_name,
       product_category,
       product_description,
-      brand,
+      brand, sub_category, child_category,
       product_type,
       // stock_qty,
       mfg_date,
       exp_date,
     } = req.body;
 
-    if (!product_name || !product_category || !product_type || !brand) {
+    if (!product_name || !product_category || !product_type || !brand ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -46,6 +46,7 @@ exports.addProduct = async (req, res) => {
       product_name,
       product_category,
       product_description,
+      sub_category, child_category,
       brand,
       product_type,
       product_img: imageUrl,
@@ -77,6 +78,8 @@ exports.getProducts = async (req, res) => {
       category = "",
       expiry_status = "",
       brand = "",
+      sub_category = "",
+      child_category = "",
     } = req.query;
 
     page = parseInt(page);
@@ -96,6 +99,8 @@ exports.getProducts = async (req, res) => {
           product_category: variant.product_category,
           product_description: variant.product_description,
           brand: variant.brand,
+          sub_category: variant.sub_category,
+          child_category: variant.child_category,
           product_type: variant.product_type,
           product_img: variant.product_img,
           // stock_qty: variant.stock_qty,
@@ -222,7 +227,7 @@ exports.UpdateProducts = async (req, res) => {
       product_name,
       product_category,
       product_description,
-      brand,
+      brand, sub_category, child_category,
       product_type,
       // stock_qty,
       mfg_date,
@@ -262,6 +267,8 @@ exports.UpdateProducts = async (req, res) => {
       product_category: product_category || product.product_category,
       product_description: product_description || product.product_description,
       brand: brand || product.brand,
+      sub_category: sub_category || product.sub_category,
+      child_category: child_category || product.child_category,
       product_type: product_type || product.product_type,
       // stock_qty: stock_qty || product.stock_qty,
       mfg_date: mfg_date || product.mfg_date,
@@ -334,12 +341,12 @@ exports.getProductByID = async (req, res) => {
 
 exports.getProductsByCategory = async (req, res) => {
   try {
-    const { category } = req.params;
+    const { type, value } = req.params; // category | sub-category | child-category
     const { brand } = req.query;
-    //  Fetch variants + multipacks (same as getProducts)
+
     const { variants, multipacks } = await getProductsWithVariants();
 
-    //  Build full product structure (same as getProducts)
+    // Build product structure
     const finalData = variants.reduce((acc, variant) => {
       let product = acc.find((p) => p.id === variant.product_id);
 
@@ -348,6 +355,8 @@ exports.getProductsByCategory = async (req, res) => {
           id: variant.product_id,
           product_name: variant.product_name,
           product_category: variant.product_category,
+          sub_category: variant.sub_category,
+          child_category: variant.child_category,
           product_description: variant.product_description,
           brand: variant.brand,
           product_type: variant.product_type,
@@ -373,7 +382,7 @@ exports.getProductsByCategory = async (req, res) => {
       return acc;
     }, []);
 
-    //  Add multipacks (same as getProducts)
+    // Add multipacks
     multipacks.forEach((mp) => {
       const product = finalData.find((p) => p.id === mp.product_id);
       if (product) {
@@ -390,48 +399,63 @@ exports.getProductsByCategory = async (req, res) => {
       }
     });
 
-    //  Add expiry status (same as getProducts)
+    // Expiry status
     const currentDate = new Date();
     finalData.forEach((product) => {
-      if (product.exp_date) {
-        const expDate = new Date(product.exp_date);
-        const diffMonths =
-          (expDate.getFullYear() - currentDate.getFullYear()) * 12 +
-          (expDate.getMonth() - currentDate.getMonth());
-
-        if (diffMonths > 8) product.expiry_status = "Up to Date";
-        else if (diffMonths > 0 && diffMonths <= 3)
-          product.expiry_status = "Near Expiry";
-        else if (expDate < currentDate) product.expiry_status = "Expired";
-        else product.expiry_status = "Moderate";
-      } else {
+      if (!product.exp_date) {
         product.expiry_status = "No Expiry Info";
+        return;
       }
+
+      const expDate = new Date(product.exp_date);
+      const diffMonths =
+        (expDate.getFullYear() - currentDate.getFullYear()) * 12 +
+        (expDate.getMonth() - currentDate.getMonth());
+
+      if (diffMonths > 8) product.expiry_status = "Up to Date";
+      else if (diffMonths <= 3 && diffMonths > 0)
+        product.expiry_status = "Near Expiry";
+      else if (expDate < currentDate) product.expiry_status = "Expired";
+      else product.expiry_status = "Moderate";
     });
 
-    //  FILTER BY CATEGORY ONLY
+    //  DYNAMIC FILTER
     const filteredProducts = finalData.filter((p) => {
-      const categoryMatch =
-        p.product_category.toLowerCase() === category.toLowerCase();
+      let levelMatch = false;
+
+      if (type === "category") {
+        levelMatch =
+          p.product_category?.toLowerCase() === value.toLowerCase();
+      }
+
+      if (type === "sub-category") {
+        levelMatch =
+          p.sub_category?.toLowerCase() === value.toLowerCase();
+      }
+
+      if (type === "child-category") {
+        levelMatch =
+          p.child_category?.toLowerCase() === value.toLowerCase();
+      }
 
       const brandMatch = brand
         ? p.brand?.toLowerCase() === brand.toLowerCase()
         : true;
 
-      return categoryMatch && brandMatch;
+      return levelMatch && brandMatch;
     });
 
-    //  Send exact same response structure as GetProducts
     return res.status(200).json({
       success: true,
       totalItems: filteredProducts.length,
       data: filteredProducts,
     });
   } catch (error) {
-    console.log("Error:", error);
+    console.error("Get Products By Category Error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
     });
   }
 };
+

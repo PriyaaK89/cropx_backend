@@ -38,13 +38,24 @@ exports.clearUserCart = async(user_id, connection)=>{
 }
 
 exports.updateOrderStatus = async (order_id, new_status) => {
-  const [result] = await db.query(
-    `UPDATE orders SET order_status = ? WHERE id = ?`,
-    [new_status, order_id]
-  );
+  let sql = `
+    UPDATE orders 
+    SET order_status = ?,
+        delivered_at = CASE 
+          WHEN ? = 'DELIVERED' THEN NOW()
+          ELSE delivered_at
+        END
+    WHERE id = ?
+  `;
+
+  const [result] = await db.query(sql, [
+    new_status,
+    new_status,
+    order_id
+  ]);
+
   return result;
 };
-
 /* Get Order Items (for stock restore on cancel) */
 exports.getOrderItems = async (order_id) => {
   const [rows] = await db.query(
@@ -55,7 +66,7 @@ exports.getOrderItems = async (order_id) => {
 };
 
 exports.getOrderById = async (order_id) => {
-  // 1️⃣ Fetch Order Master + User + Address
+  //  Fetch Order Master + User + Address
   const [order] = await db.query(
     `
     SELECT 
@@ -69,6 +80,7 @@ exports.getOrderById = async (order_id) => {
       o.payment_status,
       o.order_status,
       o.created_at,
+      o.delivered_at,
 
       -- Address fields
       a.name,
@@ -88,7 +100,7 @@ exports.getOrderById = async (order_id) => {
 
   if (!order.length) return null;
 
-  // 2️⃣ Fetch Order Items (single + multipack details)
+  //  Fetch Order Items (single + multipack details)
   const [items] = await db.query(
     `
     SELECT

@@ -2,14 +2,16 @@ const db = require("../config/db");
 
 exports.createProduct = async (data) => {
   const sql = `INSERT INTO products 
-  (product_name, product_category, product_description,brand, product_type, product_img, mfg_date, exp_date) 
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  (product_name, product_category, product_description,brand,sub_category,child_category, product_type, product_img, mfg_date, exp_date) 
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   const [result] = await db.query(sql, [
     data.product_name,
     data.product_category,
     data.product_description,
     data.brand,
+    data.sub_category,
+    data.child_category,
     data.product_type,
     data.product_img,
     // data.stock_qty,
@@ -45,6 +47,8 @@ exports.getProductsWithVariants = async () => {
       p.product_category,
       p.product_description,
       p.brand,
+      p.sub_category,
+      p.child_category,
       p.product_type,
       p.product_img,
                  
@@ -61,7 +65,7 @@ exports.getProductsWithVariants = async () => {
     LEFT JOIN product_variants v ON p.id = v.product_id
   `);
 
-  // 2️⃣ Fetch all multipacks (linked to variants)
+  //  Fetch all multipacks (linked to variants)
   const [multipacks] = await db.query(`
     SELECT
       p.id as product_id,
@@ -118,14 +122,16 @@ exports.deleteProduct = async (id) => {
 exports.updateProduct = async (id, data) => {
   const sql = `
     UPDATE products 
-    SET product_name=?, product_category=?, product_description=?, brand = ?,  product_type=?, product_img=?, mfg_date = ?, exp_date = ?
+    SET product_name=?, product_category=?, product_description=?, brand = ?, sub_category = ?, child_category = ?, product_type=?, product_img=?, mfg_date = ?, exp_date = ?
     WHERE id=?
   `;
   const params = [
     data.product_name,
     data.product_category,
     data.product_description,
-    data.brand,   
+    data.brand,
+    data.sub_category,
+    data.child_category,   
     data.product_type,
     // data.quantity_type,
     // data.quantity_value,
@@ -142,9 +148,17 @@ exports.updateProduct = async (id, data) => {
   return result;
 };
 
-exports.getProductsByCategoryModel = async (category, brand) => {
-  const query = `SELECT * FROM products WHERE product_category = ? AND brand = ?`;
+exports.getProductsByCategoryModel = async (category, brand = null) => {
+  let query = `SELECT * FROM products WHERE product_category = ?`;
+  const params = [category];
 
-  const [rows] = await db.query(query, [category, brand]);
+  if (brand) {
+    query += ` AND brand = ?`;
+    params.push(brand);
+  }
+
+  const [rows] = await db.query(query, params);
   return rows;
 };
+
+
