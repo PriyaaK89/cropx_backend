@@ -107,7 +107,7 @@ exports.getOrderById = async (order_id) => {
        oi.id AS order_item_id,
        oi.product_id,
        p.product_name,
-       p.product_category,
+       cat.cate_name AS product_category,
        p.product_description,
        p.product_img,
 
@@ -135,6 +135,7 @@ exports.getOrderById = async (order_id) => {
 
      FROM order_items oi
      JOIN products p ON p.id = oi.product_id
+     LEFT JOIN categories cat ON cat.id = p.category_id
      LEFT JOIN product_variants v ON v.id = oi.variant_id
      LEFT JOIN product_multipacks mp ON mp.id = oi.multipack_id
      WHERE oi.order_id = ?

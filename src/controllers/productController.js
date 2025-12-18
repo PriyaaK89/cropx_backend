@@ -1,30 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 const imgbbService = require("../service/ImgbbService");
-const {
-  createProduct,
-  deleteProduct,
-  getProductbyId,
-  updateProduct,
-  getProductsWithVariants,
-  getProductsByCategoryModel,
-} = require("../models/productModel");
+const { createProduct, deleteProduct, getProductbyId, updateProduct, getProductsWithVariants, getProductsByCategoryModel,} = require("../models/productModel");
 const { getVariantsByProduct } = require("../models/productVarientModel");
 
 exports.addProduct = async (req, res) => {
   try {
-    const {
-      product_name,
-      product_category,
-      product_description,
-      brand, sub_category, child_category,
-      product_type,
-      // stock_qty,
-      mfg_date,
-      exp_date,
-    } = req.body;
+    const { product_name, category_id, product_description, brand, sub_category_id, child_category_id, product_type, mfg_date, exp_date, } = req.body;
 
-    if (!product_name || !product_category || !product_type || !brand ) {
+    if (!product_name || !category_id || !product_type || !brand ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -44,9 +28,9 @@ exports.addProduct = async (req, res) => {
 
     const product = {
       product_name,
-      product_category,
+      category_id,
       product_description,
-      sub_category, child_category,
+      sub_category_id, child_category_id,
       brand,
       product_type,
       product_img: imageUrl,
@@ -96,7 +80,8 @@ exports.getProducts = async (req, res) => {
         product = {
           id: variant.product_id,
           product_name: variant.product_name,
-          product_category: variant.product_category,
+          category_id: variant.category_id,
+          category_name: variant.category_name,
           product_description: variant.product_description,
           brand: variant.brand,
           sub_category: variant.sub_category,
@@ -175,7 +160,7 @@ exports.getProducts = async (req, res) => {
         const s = search.toLowerCase();
         return (
           p.product_name.toLowerCase().includes(s) ||
-          p.product_category.toLowerCase().includes(s)
+          p.category_name.toLowerCase().includes(s)
         );
       });
     }
@@ -183,7 +168,7 @@ exports.getProducts = async (req, res) => {
     // Category filter
     if (category) {
       filteredData = filteredData.filter(
-        (p) => p.product_category.toLowerCase() === category.toLowerCase()
+        (p) => p.category_id.toLowerCase() === category.toLowerCase()
       );
     }
     if (brand) {
@@ -225,7 +210,7 @@ exports.UpdateProducts = async (req, res) => {
     const { id } = req.params;
     const {
       product_name,
-      product_category,
+      category_id,
       product_description,
       brand, sub_category, child_category,
       product_type,
@@ -264,7 +249,7 @@ exports.UpdateProducts = async (req, res) => {
 
     const updatedProductData = {
       product_name: product_name || product.product_name,
-      product_category: product_category || product.product_category,
+      category_id: category_id || product.category_id,
       product_description: product_description || product.product_description,
       brand: brand || product.brand,
       sub_category: sub_category || product.sub_category,
@@ -354,7 +339,7 @@ exports.getProductsByCategory = async (req, res) => {
         product = {
           id: variant.product_id,
           product_name: variant.product_name,
-          product_category: variant.product_category,
+          category_id: variant.category_id,
           sub_category: variant.sub_category,
           child_category: variant.child_category,
           product_description: variant.product_description,
@@ -423,10 +408,10 @@ exports.getProductsByCategory = async (req, res) => {
     const filteredProducts = finalData.filter((p) => {
       let levelMatch = false;
 
+      
       if (type === "category") {
-        levelMatch =
-          p.product_category?.toLowerCase() === value.toLowerCase();
-      }
+  levelMatch = Number(p.category_id) === Number(value);
+}
 
       if (type === "sub-category") {
         levelMatch =

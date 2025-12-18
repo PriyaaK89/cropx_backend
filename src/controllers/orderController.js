@@ -231,11 +231,12 @@ exports.updateOrderStatus = async (req, res) => {
 
     //  Update order status
     const result = await Order.updateOrderStatus(order_id, new_status);
-
+    
     if (result.affectedRows === 0) {
       await connection.rollback();
       return res.status(404).json({ message: "Order not found" });
     }
+    const updatedOrder = await Order.getOrderById(order_id);
 
     //  If order is cancelled → restore stock
     if (new_status === "CANCELLED") {

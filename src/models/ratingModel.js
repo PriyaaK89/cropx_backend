@@ -44,3 +44,16 @@ exports.updateProductRatingStats = async (product_id) => {
 
   return db.query(sql, [product_id, product_id, product_id]);
 };
+
+exports.getUserRatings = async (user_id, product_ids) => {
+  if (!product_ids.length) return [[]];
+
+  const sql = `
+    SELECT product_id, variant_id, multipack_id, rating
+    FROM product_ratings
+    WHERE user_id = ?
+      AND product_id IN (?)
+  `;
+
+  return db.query(sql, [user_id, product_ids]);
+};

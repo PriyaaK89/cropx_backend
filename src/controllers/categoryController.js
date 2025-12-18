@@ -1,10 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const {
-  createCategory,
-  getAllCategories,
-  deleteCategory,
-} = require("../models/categoryModel");
+const { createCategory, getAllCategories, deleteCategory,} = require("../models/categoryModel");
 const imgbbService = require("../service/ImgbbService");
 
 exports.addCategory = async (req, res) => {
