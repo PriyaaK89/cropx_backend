@@ -1,10 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const {
-  createCategory,
-  getAllCategories,
-  deleteCategory,
-} = require("../models/categoryModel");
+const { createCategory, getAllCategories, deleteCategory,} = require("../models/categoryModel");
 const imgbbService = require("../service/ImgbbService");
 
 exports.addCategory = async (req, res) => {
@@ -43,49 +39,6 @@ exports.addCategory = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
-exports.addCategory = async (req, res) => {
-  try {
-    const { cate_name, cate_des } = req.body;
-
-    // Validate required fields
-    if (!cate_name)
-      return res.status(400).json({ message: "Category name is required" });
-
-    if (!req.file)
-      return res.status(400).json({ message: "Category image is required" });
-
-    // Convert file to base64 for ImgBB upload
-    const filePath = path.resolve(req.file.path);
-    const base64 = fs.readFileSync(filePath, { encoding: "base64" });
-
-    // Upload image to ImgBB
-    const imageUrl = await imgbbService.uploadToImgBB(
-      base64,
-      req.file.originalname
-    );
-
-    // Delete local file after upload
-    fs.unlinkSync(filePath);
-
-    // Save category to database
-    const result = await createCategory(cate_name, cate_des || "", imageUrl);
-
-    return res.status(201).json({
-      success: true,
-      message: "Category created successfully",
-      data: {
-        id: result.insertId,
-        cate_name,
-        cate_des: cate_des || "",
-        cate_img: imageUrl,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Something went wrong" });
-  }
-};
-
 
 exports.getCategories = async (req, res) => {
   try {

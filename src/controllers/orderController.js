@@ -80,9 +80,6 @@ exports.placeOrder = async (req, res) => {
     const delivery_fee = subtotal < 500 ? 70 : 0;
     const total_amount = subtotal + delivery_fee;
 
-    // -------------------------------
-    // PAYMENT HANDLING
-    // -------------------------------
     let payment_status = "PENDING";
     let payment_id = null;
 
@@ -196,8 +193,6 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
-
-
 exports.updateOrderStatus = async (req, res) => {
   const { order_id, new_status } = req.body;
 
@@ -216,13 +211,32 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     await connection.beginTransaction();
 
+     const existingOrder = await Order.getOrderById(order_id);
+
+    if (!existingOrder) {
+      await connection.rollback();
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    //  Prevent cancelling delivered order
+    if (
+      existingOrder.order_details.order_status === "DELIVERED" &&
+      new_status === "CANCELLED"
+    ) {
+      await connection.rollback();
+      return res.status(400).json({
+        message: "Delivered order cannot be cancelled"
+      });
+    }
+
     //  Update order status
     const result = await Order.updateOrderStatus(order_id, new_status);
-
+    
     if (result.affectedRows === 0) {
       await connection.rollback();
       return res.status(404).json({ message: "Order not found" });
     }
+    const updatedOrder = await Order.getOrderById(order_id);
 
     //  If order is cancelled → restore stock
     if (new_status === "CANCELLED") {
@@ -262,7 +276,8 @@ exports.updateOrderStatus = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Order status updated to ${new_status}`
+      message: `Order status updated to ${new_status}`,
+      order: updatedOrder.order_details
     });
 
   } catch (error) {

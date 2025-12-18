@@ -10,6 +10,6 @@ router.get("/get-products", getProducts);
 router.delete("/delete-product/:id", removeProducts);
 router.put("/update-product/:id",upload.single("product_img"),UpdateProducts);
 router.get("/get-about-product/:product_id", getProductByID);
-router.get("/get-products-by-category/:category", getProductsByCategory);
+router.get("/get-products-by-category/:type/:value", getProductsByCategory);
 
 module.exports = router;

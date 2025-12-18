@@ -4,7 +4,14 @@ const AdminOrder = require("../models/adminOrderModel");
 exports.getUserOrderHistory = async (req, res) => {
   try {
     // use req.params.user_id or authenticated user (change as per your auth)
-    const user_id = req.params.user_id || req.user?.id;
+    const user_id = req.user?.id;
+
+if (!user_id) {
+  return res.status(401).json({
+    success: false,
+    message: "Unauthorized"
+  });
+}
     if (!user_id) {
       return res.status(400).json({ success: false, message: "Missing user_id" });
     }
@@ -14,7 +21,7 @@ exports.getUserOrderHistory = async (req, res) => {
     const resultOrders = [];
 
     for (const order of orders) {
-      const items = await UserOrder.getOrderItemsDetailed(order.order_id);
+      const items = await UserOrder.getOrderItemsDetailed(order.order_id, req.user.id);
 
       // Group items by product_id to build product-level object with single_packs & multi_packs
       const productMap = new Map();
@@ -35,6 +42,8 @@ exports.getUserOrderHistory = async (req, res) => {
             product_img: itm.product_img,
             mfg_date: itm.mfg_date,
             exp_date: itm.exp_date,
+            rating: itm.product_rating != null ? String(itm.product_rating) : "0",
+            rating_count: itm.product_rating_count != null ? String(itm.product_rating_count) : "0",
             single_packs: [],
             multi_packs: []
           });
@@ -53,7 +62,8 @@ exports.getUserOrderHistory = async (req, res) => {
             discount_percent: itm.v_discount_percent != null ? String(itm.v_discount_percent) : null,
             discounted_price: itm.v_discounted_price != null ? Number(itm.v_discounted_price).toFixed(2) : null,
             cart_quantity: Number(itm.order_quantity) || 0,
-            total_price: itm.item_total_price != null ? Number(itm.item_total_price).toFixed(2) : null
+            total_price: itm.item_total_price != null ? Number(itm.item_total_price).toFixed(2) : null,
+            user_rating: itm.user_rating ? Number(itm.user_rating) : null
           });
         } else {
           // multipack (use mp fields)
@@ -69,7 +79,8 @@ exports.getUserOrderHistory = async (req, res) => {
             discount_percentage: itm.mp_discount_percentage != null ? String(itm.mp_discount_percentage) : null,
             discounted_price: itm.mp_discounted_price != null ? Number(itm.mp_discounted_price).toFixed(2) : null,
             cart_quantity: Number(itm.order_quantity) || 0,
-            total_price: itm.item_total_price != null ? Number(itm.item_total_price).toFixed(2) : null
+            total_price: itm.item_total_price != null ? Number(itm.item_total_price).toFixed(2) : null,
+            user_rating: itm.user_rating ? Number(itm.user_rating) : null
           });
         }
       }
@@ -98,6 +109,7 @@ exports.getUserOrderHistory = async (req, res) => {
         payment_status: order.payment_status,
         order_status: order.order_status,
         created_at: order.created_at,
+        delivered_at: order.delivered_at,
         address,
         products // this includes single_packs & multi_packs arrays per product
       });

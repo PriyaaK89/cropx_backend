@@ -43,7 +43,7 @@ exports.getSinglePackItems = async (user_id) => {
       c.product_id,
 
       p.product_name,
-      p.product_category,
+      cat.cate_name AS product_category,
       p.product_description,
       p.product_type,
       p.product_img,
@@ -61,6 +61,7 @@ exports.getSinglePackItems = async (user_id) => {
       (v.discounted_price * c.quantity) AS total_price
     FROM cart c
     LEFT JOIN products p ON c.product_id = p.id
+    LEFT JOIN categories cat ON cat.id = p.category_id
     LEFT JOIN product_variants v ON c.variant_id = v.id
 
     WHERE c.user_id = ?
@@ -81,7 +82,7 @@ exports.getMultiPackItems = async (user_id) => {
       c.product_id,
 
       p.product_name,
-      p.product_category,
+      cat.cate_name AS product_category,
       p.product_description,
       p.product_type,
       p.product_img,
@@ -103,6 +104,7 @@ exports.getMultiPackItems = async (user_id) => {
 
     FROM cart c
     LEFT JOIN products p ON c.product_id = p.id
+    LEFT JOIN categories cat ON cat.id = p.category_id
     LEFT JOIN product_multipacks mp ON c.multipack_id = mp.id
 
     WHERE c.user_id = ? AND c.multipack_id IS NOT NULL
