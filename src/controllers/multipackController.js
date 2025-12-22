@@ -43,7 +43,7 @@ exports.addMultipack = async (req, res) => {
     const data = {
       product_id,
       variant_id,
-      unit_price,                 //  added
+      unit_price,                 
       pack_quantity,
       base_pack,
       total_quantity_value,

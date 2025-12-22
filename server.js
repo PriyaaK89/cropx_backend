@@ -20,7 +20,10 @@ const pincodeRoute = require("./src/routes/pincodeRoute");
 const searchRoute = require("./src/routes/searchRoute");
 const menuRoute = require("./src/routes/menuRoute");
 const rateRoute = require("./src/routes/ratingRoute");
-const subCategoryRoute = require("./src/routes/subCategoryRoute")
+const subCategoryRoute = require("./src/routes/subCategoryRoute");
+const collectionRoute = require("./src/routes/collectionRoute");
+const homeRoute = require("./src/routes/homeRoute");
+const productSlugRoute = require("./src/routes/productSlugRoute")
 
 dotenv.config();
 
@@ -50,6 +53,10 @@ app.use("/api", searchRoute);
 app.use(menuRoute);
 app.use(rateRoute);
 app.use(subCategoryRoute);
+app.use(collectionRoute);
+app.use(homeRoute);
+app.use(productSlugRoute);
+
 
 //  Test DB connection once
 (async () => {

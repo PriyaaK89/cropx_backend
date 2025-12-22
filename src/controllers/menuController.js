@@ -1,40 +1,61 @@
-// controllers/menuController.js
 const { getMenuData } = require("../models/menuModel");
 
 exports.getMenu = async (req, res) => {
   try {
     const rows = await getMenuData();
-
     const menu = {};
 
-    rows.forEach(({ product_category, sub_category, child_category }) => {
-      // Level 1: product_category
-      if (!menu[product_category]) {
-        menu[product_category] = {};
+    rows.forEach((row) => {
+      const {
+        category,
+        category_slug,
+        sub_category,
+        sub_category_slug,
+        child_category,
+        child_category_slug
+      } = row;
+
+      // CATEGORY LEVEL
+      if (!menu[category_slug]) {
+        menu[category_slug] = {
+          name: category,
+          slug: category_slug,
+          sub_categories: []
+        };
       }
 
-      // Level 2: sub_category
-      if (!menu[product_category][sub_category]) {
-        menu[product_category][sub_category] = [];
+      // FIND OR CREATE SUB CATEGORY
+      let subCat = menu[category_slug].sub_categories.find(
+        (sc) => sc.slug === sub_category_slug
+      );
+
+      if (!subCat) {
+        subCat = {
+          name: sub_category,
+          slug: sub_category_slug,
+          children: []
+        };
+        menu[category_slug].sub_categories.push(subCat);
       }
 
-      // Level 3: child_category
-      if (
-        !menu[product_category][sub_category].includes(child_category)
-      ) {
-        menu[product_category][sub_category].push(child_category);
+      // CHILD CATEGORY
+      if (child_category) {
+        subCat.children.push({
+          name: child_category,
+          slug: child_category_slug
+        });
       }
     });
 
     return res.status(200).json({
       success: true,
-      data: menu,
+      data: Object.values(menu)
     });
   } catch (error) {
     console.error("Menu API Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch menu data",
+      message: "Failed to fetch menu data"
     });
   }
 };

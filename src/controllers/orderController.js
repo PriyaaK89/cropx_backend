@@ -76,9 +76,12 @@ exports.placeOrder = async (req, res) => {
     }
 
     // Calculate Amounts
-    const subtotal = cartData.price_summary.subtotal;
-    const delivery_fee = subtotal < 500 ? 70 : 0;
-    const total_amount = subtotal + delivery_fee;
+    // const subtotal = cartData.price_summary.subtotal;
+    // const delivery_fee = subtotal < 500 ? 70 : 0;
+    // const total_amount = subtotal + delivery_fee;
+    const subtotal = Number(cartData.price_summary.subtotal);
+const delivery_fee = subtotal < 500 ? 70 : 0;
+const total_amount = subtotal + delivery_fee;
 
     let payment_status = "PENDING";
     let payment_id = null;
@@ -94,6 +97,7 @@ exports.placeOrder = async (req, res) => {
       payment_status = "PAID";
       payment_id = razorpay_payment_id;
     }
+  
 
     // -------------------------------
     // CREATE ORDER
@@ -299,11 +303,20 @@ exports.createRazorpayOrder = async (req, res) => {
     if (!amount) {
       return res.status(400).json({ message: "Amount is required" });
     }
+    amount = Number(amount);
+
+    if (isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ message: "Invalid amount" });
+    }
+
+    // ALWAYS convert safely to integer paise
+    const amountInPaise = Math.round(amount * 100);
 
     const options = {
-      amount: amount * 100,   // convert to paisa
-      currency: "INR",
-      receipt: "rcpt_" + Date.now(),
+      amount: amountInPaise,   // convert to paisa
+       currency: "INR",
+      receipt: `rcpt_${Date.now()}`,
+      payment_capture: 1
     };
 
     const razorpayOrder = await razorpay
