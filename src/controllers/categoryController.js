@@ -40,6 +40,7 @@ const imgbbService = require("../service/ImgbbService");
 //   }
 // };
 
+
 exports.addCategory = async (req, res) => {
   try {
     const {
@@ -59,29 +60,27 @@ exports.addCategory = async (req, res) => {
       });
     }
 
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "Image is required"
-      });
+    let imageUrl = null; // default if no image
+    
+
+    //  If image is uploaded
+    if (req.file) {
+      const filePath = path.resolve(req.file.path);
+      const base64 = fs.readFileSync(filePath, { encoding: "base64" });
+
+      imageUrl = await imgbbService.uploadToImgBB(
+        base64,
+        req.file.originalname
+      );
+
+      fs.unlinkSync(filePath); // remove local file
     }
-
-    // Upload image
-    const filePath = path.resolve(req.file.path);
-    const base64 = fs.readFileSync(filePath, { encoding: "base64" });
-
-    const imageUrl = await imgbbService.uploadToImgBB(
-      base64,
-      req.file.originalname
-    );
-
-    fs.unlinkSync(filePath);
 
     const result = await createCategory({
       cate_name,
       slug,
       description,
-      image: imageUrl,
+      image: imageUrl, // null if no image
       show_in_menu: Number(show_in_menu),
       show_on_home: Number(show_on_home),
       menu_order: Number(menu_order),
@@ -107,6 +106,7 @@ exports.addCategory = async (req, res) => {
     });
   }
 };
+
 
 exports.getCategories = async (req, res) => {
   try {
