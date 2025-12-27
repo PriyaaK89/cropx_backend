@@ -24,6 +24,7 @@ const subCategoryRoute = require("./src/routes/subCategoryRoute");
 const collectionRoute = require("./src/routes/collectionRoute");
 const homeRoute = require("./src/routes/homeRoute");
 const productSlugRoute = require("./src/routes/productSlugRoute")
+const productsByType = require("./src/routes/productsByType")
 
 dotenv.config();
 
@@ -56,6 +57,8 @@ app.use(subCategoryRoute);
 app.use(collectionRoute);
 app.use(homeRoute);
 app.use(productSlugRoute);
+console.log(productsByType, "products")
+app.use(productsByType);
 
 
 //  Test DB connection once

@@ -70,6 +70,10 @@ exports.getProductsWithVariants = async () => {
       p.product_img,
       p.mfg_date,
       p.exp_date,
+       p.rating,
+        p.rating_count,
+        p.total_sold,
+ 
 
       v.id AS variant_id,
       v.quantity_type,

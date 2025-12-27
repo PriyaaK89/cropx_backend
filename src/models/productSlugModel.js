@@ -149,10 +149,6 @@ exports.getProductsBySlugModel = async ({
   if (sort === "rating") orderBy = "rating DESC";
   if (sort === "best_selling") orderBy = "total_sold DESC";
 
-  /* =========================
-     COUNT QUERY (FIXED)
-  ========================== */
-
   const countSql = `
     SELECT COUNT(*) AS total
     FROM (
@@ -169,10 +165,6 @@ exports.getProductsBySlugModel = async ({
   `;
 
   const [[{ total }]] = await db.query(countSql, values);
-
-  /* =========================
-     FINAL DATA QUERY
-  ========================== */
 
   const dataSql = `
     SELECT *

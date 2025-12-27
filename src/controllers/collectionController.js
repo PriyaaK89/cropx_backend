@@ -1,7 +1,8 @@
 const {
   createCollection,
   mapChildCategory,
-  getAllCollections,updateCollection
+  getAllCollections,updateCollection, deleteCollectionById,
+  deleteCollectionCategoryMap
 } = require("../models/collectionModel");
 const fs = require("fs");
 const path = require("path");
@@ -124,6 +125,32 @@ exports.updateCollection = async (req, res) => {
     });
   } catch (err) {
     console.error("Update Collection Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+exports.deleteCollection = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await deleteCollectionCategoryMap(id);
+
+    const result = await deleteCollectionById(id);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Collection not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Collection deleted successfully"
+    });
+  } catch (err) {
+    console.error("Delete Collection Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

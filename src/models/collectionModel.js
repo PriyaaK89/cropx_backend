@@ -85,3 +85,19 @@ exports.updateCollection = async (id, data) => {
   const [result] = await db.query(sql, values);
   return result;
 };
+
+exports.deleteCollectionById = async (id) => {
+  const [result] = await db.query(
+    `DELETE FROM collections WHERE id = ?`,
+    [id]
+  );
+  return result;
+};
+
+// DELETE mapped child categories (optional but recommended)
+exports.deleteCollectionCategoryMap = async (collection_id) => {
+  await db.query(
+    `DELETE FROM collection_category_map WHERE collection_id = ?`,
+    [collection_id]
+  );
+};

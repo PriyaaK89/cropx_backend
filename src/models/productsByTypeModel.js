@@ -32,7 +32,6 @@ exports.getBestSellingCount = async () => {
   return row.total;
 };
 
-
 exports.getNewArrivals = async (limit = 10) => {
   const sql = `
     SELECT
@@ -52,7 +51,6 @@ exports.getNewArrivals = async (limit = 10) => {
   return rows;
 };
 
-
 exports.getFeaturedProducts = async (limit = 10) => {
   const sql = `
     SELECT
@@ -60,6 +58,9 @@ exports.getFeaturedProducts = async (limit = 10) => {
       p.product_name,
       p.product_img,
       p.rating,
+      p.rating_count,
+      p.total_sold,
+      SUM(v.stock_qty) AS total_stock,
       MIN(v.discounted_price) AS price
     FROM products p
     LEFT JOIN product_variants v ON v.product_id = p.id
