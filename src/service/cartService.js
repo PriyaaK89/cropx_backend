@@ -106,10 +106,10 @@ exports.getCartData = async (user_id) => {
     cart_items: [...singleRows, ...multiRows].reduce((sum, item) => sum + item.cart_quantity, 0),
 
     price_summary: {
-      subtotal,
+      subtotal: subtotal,
       gst,
       delivery_fee,
-      grand_total
+      grand_total: grand_total
     },
 
     cart: grouped

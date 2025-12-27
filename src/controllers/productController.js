@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const imgbbService = require("../service/ImgbbService");
-const { createProduct, deleteProduct, getProductbyId, updateProduct, getProductsWithVariants, getProductsByCategoryModel,} = require("../models/productModel");
+const { createProduct, deleteProduct, getProductbyId, updateProduct, getProductsWithVariants, } = require("../models/productModel");
 const { getVariantsByProduct } = require("../models/productVarientModel");
 
 exports.addProduct = async (req, res) => {
@@ -151,10 +151,8 @@ exports.getProducts = async (req, res) => {
       }
     });
 
-    //  Apply Filters
     let filteredData = finalData;
 
-    // Search filter (product_name)
     if (search) {
       filteredData = filteredData.filter((p) => {
         const s = search.toLowerCase();
@@ -165,7 +163,6 @@ exports.getProducts = async (req, res) => {
       });
     }
 
-    // Category filter
     if (category) {
       filteredData = filteredData.filter(
         (p) => p.category_id.toLowerCase() === category.toLowerCase()
@@ -214,13 +211,8 @@ exports.UpdateProducts = async (req, res) => {
       product_description,
       brand, sub_category, child_category,
       product_type,
-      // stock_qty,
       mfg_date,
       exp_date,
-      // quantity_type,
-      // quantity_value,
-      // actual_price,
-      // discounted_price,
     } = req.body;
 
     const product = await getProductbyId(id);
@@ -240,13 +232,6 @@ exports.UpdateProducts = async (req, res) => {
       fs.unlinkSync(filePath);
     }
 
-    // if (product_type === "liquid" && !["liter", "ml"].includes(quantity_type)) {
-    //   return res.status(400).json({ message: "Liquid can only be liter or ml" });
-    // }
-    // if (product_type === "solid" && !["kg", "gm"].includes(quantity_type)) {
-    //   return res.status(400).json({ message: "Solid can only be kg or gm" });
-    // }
-
     const updatedProductData = {
       product_name: product_name || product.product_name,
       category_id: category_id || product.category_id,
@@ -255,13 +240,8 @@ exports.UpdateProducts = async (req, res) => {
       sub_category: sub_category || product.sub_category,
       child_category: child_category || product.child_category,
       product_type: product_type || product.product_type,
-      // stock_qty: stock_qty || product.stock_qty,
       mfg_date: mfg_date || product.mfg_date,
       exp_date: exp_date || product.exp_date,
-      // quantity_type: quantity_type || product.quantity_type,
-      // quantity_value: quantity_value || product.quantity_value,
-      // actual_price: actual_price || product.actual_price,
-      // discounted_price: discounted_price || product.discounted_price,
       product_img: imageUrl,
     };
     console.log("id =>", id, typeof id);
@@ -340,7 +320,9 @@ exports.getProductsByCategory = async (req, res) => {
           id: variant.product_id,
           product_name: variant.product_name,
           category_id: variant.category_id,
+          sub_category_id: variant.sub_category_id,
           sub_category: variant.sub_category,
+          child_category_id: variant.child_category_id,
           child_category: variant.child_category,
           product_description: variant.product_description,
           brand: variant.brand,
@@ -415,12 +397,14 @@ exports.getProductsByCategory = async (req, res) => {
 
       if (type === "sub-category") {
         levelMatch =
-          p.sub_category?.toLowerCase() === value.toLowerCase();
+          // p.sub_category?.toLowerCase() === value.toLowerCase();
+          Number(p.sub_category_id) === Number(value)
       }
 
       if (type === "child-category") {
         levelMatch =
-          p.child_category?.toLowerCase() === value.toLowerCase();
+          // p.child_category?.toLowerCase() === value.toLowerCase();
+          Number(p.child_category_id) === Number(value)
       }
 
       const brandMatch = brand

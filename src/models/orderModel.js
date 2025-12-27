@@ -149,6 +149,23 @@ exports.getOrderById = async (order_id) => {
   };
 };
 
+exports.incrementTotalSold = async (order_id, connection) => {
+  await connection.query(`
+    UPDATE products p
+    JOIN order_items oi ON oi.product_id = p.id
+    SET p.total_sold = p.total_sold + oi.quantity
+    WHERE oi.order_id = ?
+  `, [order_id]);
+};
+
+exports.decrementTotalSold = async (order_id, connection) => {
+  await connection.query(`
+    UPDATE products p
+    JOIN order_items oi ON oi.product_id = p.id
+    SET p.total_sold = GREATEST(p.total_sold - oi.quantity, 0)
+    WHERE oi.order_id = ?
+  `, [order_id]);
+};
 
 
 /* Get order items */

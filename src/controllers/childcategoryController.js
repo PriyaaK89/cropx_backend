@@ -5,7 +5,7 @@ const {
 
 exports.addChildCategory = async (req, res) => {
   try {
-    const { sub_category_id, name } = req.body;
+    const { sub_category_id, name, slug, menu_order = 0 } = req.body;
 
     if (!sub_category_id || !name) {
       return res.status(400).json({
@@ -14,7 +14,12 @@ exports.addChildCategory = async (req, res) => {
       });
     }
 
-    const result = await createChildCategory(sub_category_id, name);
+    const result = await createChildCategory(
+      sub_category_id,
+      name,
+      slug,
+      menu_order
+    );
 
     return res.status(201).json({
       success: true,
@@ -23,21 +28,19 @@ exports.addChildCategory = async (req, res) => {
         id: result.insertId,
         sub_category_id,
         name,
+        slug,
+        menu_order
       },
     });
   } catch (error) {
     console.error("Add Child Category Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong",
+      message: "Child category creation failed",
     });
   }
 };
 
-/**
- * Get Child Categories by Sub Category
- * GET /api/child-categories?sub_category_id=ID
- */
 exports.getChildCategories = async (req, res) => {
   try {
     const { sub_category_id } = req.query;
@@ -60,7 +63,7 @@ exports.getChildCategories = async (req, res) => {
     console.error("Get Child Categories Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong",
+      message: "Failed to fetch child categories",
     });
   }
 };

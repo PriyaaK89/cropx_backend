@@ -27,16 +27,28 @@ exports.getAllProducts = async () => {
   return rows;
 };
 
-
 exports.getProductbyId = async (id) => {
   try {
-    const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
+    const [rows] = await db.query(`
+      SELECT 
+        p.*,
+        c.cate_name AS category_name,
+        sc.name AS sub_category,
+        cc.name AS child_category
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
+      LEFT JOIN child_categories cc ON p.child_category_id = cc.id
+      WHERE p.id = ?
+    `, [id]);
+
     return rows[0];  
   } catch (error) {
     console.error("Error in getProductById:", error);
     throw error;
   }
 };
+
 
 exports.getProductsWithVariants = async () => {
   // Fetch all variants (single packs)
@@ -58,6 +70,10 @@ exports.getProductsWithVariants = async () => {
       p.product_img,
       p.mfg_date,
       p.exp_date,
+       p.rating,
+        p.rating_count,
+        p.total_sold,
+ 
 
       v.id AS variant_id,
       v.quantity_type,
@@ -130,17 +146,6 @@ exports.updateProduct = async (id, data) => {
   return result;
 };
 
-exports.getProductsByCategoryModel = async (category, brand = null) => {
-  let query = `SELECT * FROM products WHERE product_category = ?`;
-  const params = [category];
 
-  if (brand) {
-    query += ` AND brand = ?`;
-    params.push(brand);
-  }
-
-  const [rows] = await db.query(query, params);
-  return rows;
-};
 
 
