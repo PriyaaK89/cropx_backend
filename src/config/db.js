@@ -6,15 +6,16 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const db = mysql.createPool({
-  host: process.env.MYSQL_HOST,      // Railway MySQL host
-  user: process.env.MYSQL_USER,      // Railway MySQL user
-  password: process.env.MYSQL_PASSWORD, // Railway MySQL password
-  database: process.env.MYSQL_DATABASE, // Railway MySQL database name
-  port: process.env.MYSQL_PORT,      // Railway MySQL port (usually 3306)
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
 });
+
 
 module.exports = db;
 
