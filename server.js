@@ -26,7 +26,10 @@ const homeRoute = require("./src/routes/homeRoute");
 const productSlugRoute = require("./src/routes/productSlugRoute")
 const productsByType = require("./src/routes/productsByType")
 
-dotenv.config();
+// dotenv.config();
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const app = express();
 
