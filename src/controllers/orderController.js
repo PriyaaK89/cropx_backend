@@ -3,7 +3,7 @@ const Address = require("../models/addressModel");
 const Order = require("../models/orderModel");
 const db = require("../config/db");
 const crypto = require("crypto");
-const razorpay = require("../service/razorpay");
+
 
 exports.getOrderSummary = async (req, res) => {
   try {
@@ -310,24 +310,71 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
+// exports.createRazorpayOrder = async (req, res) => {
+//   try {
+//     const { amount } = req.body; 
+
+//     if (!amount) {
+//       return res.status(400).json({ message: "Amount is required" });
+//     }
+//     amount = Number(amount);
+
+//     if (isNaN(amount) || amount <= 0) {
+//       return res.status(400).json({ message: "Invalid amount" });
+//     }
+
+  
+//     const amountInPaise = Math.round(amount * 100);
+
+//     const options = {
+//       amount: amountInPaise, 
+//       currency: "INR",
+//       receipt: `rcpt_${Date.now()}`,
+//       payment_capture: 1,
+//     };
+
+//     const razorpayOrder = await razorpay.orders.create(options);
+
+//     return res.status(200).json({
+//       success: true,
+//       order_id: razorpayOrder.id,
+//       amount: razorpayOrder.amount,
+//       currency: razorpayOrder.currency,
+//     });
+//   } catch (error) {
+//     console.error("Razorpay Order Error:", error);
+//     return res.status(500).json({ message: "Failed to create Razorpay order" });
+//   }
+// };
+
+
 exports.createRazorpayOrder = async (req, res) => {
   try {
-    const { amount } = req.body; // amount in INR
+    const { amount } = req.body;
 
     if (!amount) {
       return res.status(400).json({ message: "Amount is required" });
     }
-    amount = Number(amount);
 
-    if (isNaN(amount) || amount <= 0) {
+    const numericAmount = Number(amount);
+
+    if (isNaN(numericAmount) || numericAmount <= 0) {
       return res.status(400).json({ message: "Invalid amount" });
     }
 
-    // ALWAYS convert safely to integer paise
-    const amountInPaise = Math.round(amount * 100);
+    // Load Razorpay ONLY here
+    const razorpay = require("../service/razorpay");
+
+    if (!razorpay) {
+      return res
+        .status(503)
+        .json({ message: "Payment service unavailable" });
+    }
+
+    const amountInPaise = Math.round(numericAmount * 100);
 
     const options = {
-      amount: amountInPaise, // convert to paisa
+      amount: amountInPaise,
       currency: "INR",
       receipt: `rcpt_${Date.now()}`,
       payment_capture: 1,
@@ -343,9 +390,13 @@ exports.createRazorpayOrder = async (req, res) => {
     });
   } catch (error) {
     console.error("Razorpay Order Error:", error);
-    return res.status(500).json({ message: "Failed to create Razorpay order" });
+    return res.status(500).json({
+      message: "Failed to create Razorpay order",
+      error: error.message,
+    });
   }
 };
+
 
 exports.verifyPayment = async (req, res) => {
   try {
