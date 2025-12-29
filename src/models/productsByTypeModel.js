@@ -32,7 +32,9 @@ exports.getBestSellingCount = async () => {
   return row.total;
 };
 
-exports.getNewArrivals = async (limit = 10) => {
+exports.getNewArrivals = async (page = 1, limit = 10) => {
+  const offset = (page - 1) * limit;
+
   const sql = `
     SELECT
       p.id,
@@ -44,14 +46,26 @@ exports.getNewArrivals = async (limit = 10) => {
     LEFT JOIN product_variants v ON v.product_id = p.id
     GROUP BY p.id
     ORDER BY p.created_at DESC
-    LIMIT ?
+    LIMIT ? OFFSET ?
   `;
 
-  const [rows] = await db.query(sql, [limit]);
+  const [rows] = await db.query(sql, [limit, offset]);
   return rows;
 };
 
-exports.getFeaturedProducts = async (limit = 10) => {
+exports.getNewArrivalsCount = async () => {
+  const sql = `
+    SELECT COUNT(*) AS total
+    FROM products
+  `;
+  const [[row]] = await db.query(sql);
+  return row.total;
+};
+
+
+exports.getFeaturedProducts = async (page = 1, limit = 10) => {
+  const offset = (page - 1) * limit;
+
   const sql = `
     SELECT
       p.id,
@@ -66,9 +80,20 @@ exports.getFeaturedProducts = async (limit = 10) => {
     LEFT JOIN product_variants v ON v.product_id = p.id
     WHERE p.is_featured = 1
     GROUP BY p.id
-    LIMIT ?
+    LIMIT ? OFFSET ?
   `;
 
-  const [rows] = await db.query(sql, [limit]);
+  const [rows] = await db.query(sql, [limit, offset]);
   return rows;
 };
+
+exports.getFeaturedProductsCount = async () => {
+  const sql = `
+    SELECT COUNT(*) AS total
+    FROM products
+    WHERE is_featured = 1
+  `;
+  const [[row]] = await db.query(sql);
+  return row.total;
+};
+

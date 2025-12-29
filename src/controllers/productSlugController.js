@@ -137,8 +137,8 @@ exports.getProductsBySlug = async (req, res) => {
         (expDate.getMonth() - currentDate.getMonth());
 
       if (expDate < currentDate) product.expiry_status = "Expired";
-      else if (diffMonths <= 3) product.expiry_status = "Near Expiry";
-      else if (diffMonths > 8) product.expiry_status = "Up to Date";
+      else if (diffMonths <= 3) product.expiry_status = "near_expiry";
+      else if (diffMonths > 8) product.expiry_status = "up_to_date";
       else product.expiry_status = "Moderate";
     });
 
