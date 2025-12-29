@@ -90,9 +90,9 @@ const formatProducts = async ({ productIds = null }) => {
       (expDate.getMonth() - currentDate.getMonth());
 
     if (expDate < currentDate) p.expiry_status = "Expired";
-    else if (diffMonths <= 3) p.expiry_status = "Near Expiry";
+    else if (diffMonths <= 3) p.expiry_status = "near_expiry";
     else if (diffMonths <= 8) p.expiry_status = "Moderate";
-    else p.expiry_status = "Up to Date";
+    else p.expiry_status = "up_to_date";
   });
 
   return products;

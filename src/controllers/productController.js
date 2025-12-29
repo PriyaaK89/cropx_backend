@@ -138,9 +138,9 @@ exports.getProducts = async (req, res) => {
           (expDate.getMonth() - currentDate.getMonth());
 
         if (diffMonths > 8) {
-          product.expiry_status = "Up to Date";
+          product.expiry_status = "up_to_date";
         } else if (diffMonths > 0 && diffMonths <= 3) {
-          product.expiry_status = "Near Expiry";
+          product.expiry_status = "near_expiry";
         } else if (expDate < currentDate) {
           product.expiry_status = "Expired";
         } else {
@@ -379,9 +379,9 @@ exports.getProductsByCategory = async (req, res) => {
         (expDate.getFullYear() - currentDate.getFullYear()) * 12 +
         (expDate.getMonth() - currentDate.getMonth());
 
-      if (diffMonths > 8) product.expiry_status = "Up to Date";
+      if (diffMonths > 8) product.expiry_status = "up_to_date";
       else if (diffMonths <= 3 && diffMonths > 0)
-        product.expiry_status = "Near Expiry";
+        product.expiry_status = "near_expiry";
       else if (expDate < currentDate) product.expiry_status = "Expired";
       else product.expiry_status = "Moderate";
     });
