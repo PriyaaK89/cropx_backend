@@ -1,12 +1,13 @@
+// server.js
 const express = require("express");
-const dotenv = require("dotenv");
 const cors = require("cors");
 const db = require("./src/config/db");
+
+// Routes
 const authRoutes = require("./src/routes/authRoute");
-const IsDistributorRoute = require("./src/routes/IsDistributorRoute")
-const loginRoute = require("./src/routes/loginRoute")
-const categoryRoute = require("./src/routes/categoryRoute")
-const path = require("path");
+const IsDistributorRoute = require("./src/routes/IsDistributorRoute");
+const loginRoute = require("./src/routes/loginRoute");
+const categoryRoute = require("./src/routes/categoryRoute");
 const productRoute = require("./src/routes/productRoute");
 const bannerRoute = require("./src/routes/bannerRoute");
 const productVarientRoute = require("./src/routes/productVarientRoute");
@@ -23,12 +24,12 @@ const rateRoute = require("./src/routes/ratingRoute");
 const subCategoryRoute = require("./src/routes/subCategoryRoute");
 const collectionRoute = require("./src/routes/collectionRoute");
 const homeRoute = require("./src/routes/homeRoute");
-const productSlugRoute = require("./src/routes/productSlugRoute")
-const productsByType = require("./src/routes/productsByType")
+const productSlugRoute = require("./src/routes/productSlugRoute");
+const productsByType = require("./src/routes/productsByType");
 
-// dotenv.config();
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
+//  Load dotenv only for local development
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
 }
 
 const app = express();
@@ -37,22 +38,22 @@ const app = express();
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
 // Routes
-app.use( authRoutes);
-app.use( IsDistributorRoute);
-app.use( loginRoute);
-app.use('/category', categoryRoute);
+app.use(authRoutes);
+app.use(IsDistributorRoute);
+app.use(loginRoute);
+app.use("/category", categoryRoute);
 app.use("/product", productRoute);
 app.use("/banner", bannerRoute);
 app.use("/product", productVarientRoute);
-app.use("/product",productDetailsRoute);
+app.use("/product", productDetailsRoute);
 app.use("/cart", cartRoute);
-// console.log(contactRoute, "contactRoute");
 app.use("/api", contactRoute);
 app.use("/api", deliveryAddressRoute);
 app.use("/api", ordersRoute);
-app.use( adminOrderRoute);
-app.use( pincodeRoute);
+app.use(adminOrderRoute);
+app.use(pincodeRoute);
 app.use("/api", searchRoute);
 app.use(menuRoute);
 app.use(rateRoute);
@@ -60,11 +61,9 @@ app.use(subCategoryRoute);
 app.use(collectionRoute);
 app.use(homeRoute);
 app.use(productSlugRoute);
-console.log(productsByType, "products")
 app.use(productsByType);
 
-
-//  Test DB connection once
+// Test DB connection once
 (async () => {
   try {
     const [rows] = await db.query("SELECT 1");
@@ -74,11 +73,11 @@ app.use(productsByType);
   }
 })();
 
-//  Default route
+// Default route
 app.get("/", (req, res) => {
-  res.send("CropX backend is running ");
+  res.send("CropX backend is running");
 });
 
-//  Start the server
+// Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
