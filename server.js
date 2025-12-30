@@ -39,6 +39,11 @@ app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
+console.log("MYSQLHOST:", process.env.MYSQLHOST);
+console.log("MYSQLUSER:", process.env.MYSQLUSER);
+console.log("MYSQLDATABASE:", process.env.MYSQLDATABASE);
+console.log("MYSQLPORT:", process.env.MYSQLPORT);
+
 // Routes
 app.use(authRoutes);
 app.use(IsDistributorRoute);
