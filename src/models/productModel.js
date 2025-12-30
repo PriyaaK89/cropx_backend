@@ -27,27 +27,69 @@ exports.getAllProducts = async () => {
   return rows;
 };
 
+// exports.getProductbyId = async (id) => {
+//   try {
+//     const [rows] = await db.query(`
+//       SELECT 
+//         p.*,
+//         c.cate_name AS category_name,
+//         sc.name AS sub_category,
+//         cc.name AS child_category
+//       FROM products p
+//       LEFT JOIN categories c ON p.category_id = c.id
+//       LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
+//       LEFT JOIN child_categories cc ON p.child_category_id = cc.id
+//       WHERE p.id = ?
+//     `, [id]);
+
+//     return rows[0];  
+//   } catch (error) {
+//     console.error("Error in getProductById:", error);
+//     throw error;
+//   }
+// };
+
 exports.getProductbyId = async (id) => {
   try {
     const [rows] = await db.query(`
       SELECT 
-        p.*,
+        p.id,
+        p.product_name,
+        p.product_description,
+        p.product_type,
+        p.product_img,
+        p.brand,
+
+        c.id AS category_id,
         c.cate_name AS category_name,
-        sc.name AS sub_category,
-        cc.name AS child_category
+
+        sc.id AS sub_category_id,
+        sc.name AS sub_category_name,
+
+        cc.id AS child_category_id,
+        cc.name AS child_category_name,
+
+        -- rating aggregation
+        COALESCE(AVG(r.rating), 0) AS avg_rating,
+        COUNT(r.id) AS rating_count
+
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
       LEFT JOIN child_categories cc ON p.child_category_id = cc.id
+      LEFT JOIN product_ratings r ON r.product_id = p.id
+
       WHERE p.id = ?
+      GROUP BY p.id
     `, [id]);
 
-    return rows[0];  
+    return rows[0];
   } catch (error) {
     console.error("Error in getProductById:", error);
     throw error;
   }
 };
+
 
 
 exports.getProductsWithVariants = async () => {

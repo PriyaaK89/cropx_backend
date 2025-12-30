@@ -2,7 +2,7 @@
 const express = require("express");
 const cors = require("cors");
 const db = require("./src/config/db");
-
+require("dotenv").config();
 // Routes
 const authRoutes = require("./src/routes/authRoute");
 const IsDistributorRoute = require("./src/routes/IsDistributorRoute");
@@ -27,10 +27,7 @@ const homeRoute = require("./src/routes/homeRoute");
 const productSlugRoute = require("./src/routes/productSlugRoute");
 const productsByType = require("./src/routes/productsByType");
 
-//  Load dotenv only for local development
-if (process.env.NODE_ENV !== "production") {
-  require("dotenv").config();
-}
+
 
 const app = express();
 
@@ -38,11 +35,6 @@ const app = express();
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-
-console.log("MYSQLHOST:", process.env.MYSQLHOST);
-console.log("MYSQLUSER:", process.env.MYSQLUSER);
-console.log("MYSQLDATABASE:", process.env.MYSQLDATABASE);
-console.log("MYSQLPORT:", process.env.MYSQLPORT);
 
 // Routes
 app.use(authRoutes);
