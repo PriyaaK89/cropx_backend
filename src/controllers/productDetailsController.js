@@ -72,7 +72,9 @@ exports.getProductDetails = async (req, res) => {
     const { product_id } = req.params;
 
     const product = await getProductbyId(product_id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
     const variants = await getVariantsByProduct(product_id);
     const detail = await getDetailsByProductId(product_id);
@@ -80,29 +82,55 @@ exports.getProductDetails = async (req, res) => {
     const finalResponse = {
       id: product.id,
       product_name: product.product_name,
-      product_category: product.product_category,
       product_description: product.product_description,
       product_type: product.product_type,
       product_img: product.product_img,
+
+      brand: product.brand,
+
+      category: {
+        id: product.category_id,
+        name: product.category_name,
+      },
+
+      sub_category: {
+        id: product.sub_category_id,
+        name: product.sub_category_name,
+      },
+
+      child_category: {
+        id: product.child_category_id,
+        name: product.child_category_name,
+      },
+
+      rating: {
+        average: Number(product.avg_rating).toFixed(1),
+        count: product.rating_count,
+      },
+
       single_packs: variants.single_packs,
       multi_packs: variants.multi_packs,
+
       details: detail
         ? {
-      images: safeJSON(detail.images),
-      product_overview: safeJSON(detail.product_overview),
-      key_features_and_benefits: safeJSON(detail.key_features_and_benefits),
-      expert_advice: safeJSON(detail.expert_advice),
-      additional_information: safeJSON(detail.additional_information),
-    }
+            images: safeJSON(detail.images),
+            product_overview: safeJSON(detail.product_overview),
+            key_features_and_benefits: safeJSON(detail.key_features_and_benefits),
+            expert_advice: safeJSON(detail.expert_advice),
+            additional_information: safeJSON(detail.additional_information),
+          }
         : null,
     };
 
     return res.status(200).json({ success: true, data: finalResponse });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
 
 const parseField = (value) => {
   try {

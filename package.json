@@ -85,7 +85,7 @@
 
      
 
-  "start": "node server.js"
+  "start": "npx nodemon server.js"
    
 
   },

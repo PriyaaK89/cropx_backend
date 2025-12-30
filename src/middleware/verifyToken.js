@@ -1,9 +1,7 @@
 // middleware/verifyToken.js
 const jwt = require("jsonwebtoken");
-// require("dotenv").config();
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+require("dotenv").config();
+
 const { findToken } = require("../models/tokenModel");
 const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key_here";
 
