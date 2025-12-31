@@ -32,7 +32,21 @@ const productsByType = require("./src/routes/productsByType");
 const app = express();
 
 // Middleware
-app.use(cors({ origin: "*" }));
+// app.use(cors({ origin: "*" }));
+const corsOptions = {
+    origin: function(origin, callback) {
+        // allow your frontend domain
+        if (!origin || origin === 'https://cropxgenetic.com') {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true // allow cookies/auth headers
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
