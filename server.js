@@ -26,7 +26,7 @@ const collectionRoute = require("./src/routes/collectionRoute");
 const homeRoute = require("./src/routes/homeRoute");
 const productSlugRoute = require("./src/routes/productSlugRoute");
 const productsByType = require("./src/routes/productsByType");
-
+const uploadRoute = require("./src/routes/uploadRoute")
 
 
 const app = express();
@@ -60,6 +60,7 @@ app.use(collectionRoute);
 app.use(homeRoute);
 app.use(productSlugRoute);
 app.use(productsByType);
+app.use(uploadRoute);
 
 // Test DB connection once
 (async () => {

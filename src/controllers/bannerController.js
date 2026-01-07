@@ -1,50 +1,13 @@
 const fs = require("fs");
-const path = require("path");
-const imgbbService = require("../service/ImgbbService");
 const { UploadBanner, getBanner, deleteBanner } = require("../models/bannerModel");
-
-// exports.uploadBanner = async(req, res)=>{
-//   try{
-//     if(!req.file) return res.status(400).json({message:"Banner image is required"});
-
-//     const filePath = path.resolve(req.file.path);
-//     const base64 = fs.readFileSync(filePath, {encoding:"base64"});
-
-//     const imageUrl = await imgbbService.uploadToImgBB(base64, req.file.originalname);
-
-//     fs.unlinkSync(filePath);
-
-//     const result = await UploadBanner(imageUrl);
-
-//     return res.status(201).json({
-//       success:true,
-//       message:"Banner uploaded successfully",
-//       id: result.insertId,
-//       banner_image: imageUrl
-//     });
-
-//   }catch(error){
-//     console.log(error);
-//     return res.status(500).json({message:"Something went wrong"});
-//   }
-// };
-
 
 exports.uploadBanner = async (req, res) => {
   try {
     if (!req.file)
       return res.status(400).json({ message: "Banner image is required" });
 
-    const filePath = path.resolve(req.file.path);
-
-    const fileBuffer = fs.readFileSync(filePath); //  NO BASE64
-
-    const imageUrl = await imgbbService.uploadToImgBB(
-      fileBuffer,
-      req.file.originalname
-    );
-
-    fs.unlinkSync(filePath);
+    console.log("S3 FILE:", req.file);
+    const imageUrl = req.file.location; // S3 URL
 
     const result = await UploadBanner(imageUrl);
 
@@ -55,7 +18,7 @@ exports.uploadBanner = async (req, res) => {
       banner_image: imageUrl,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ message: "Something went wrong" });
   }
 };

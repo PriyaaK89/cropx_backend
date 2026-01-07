@@ -31,3 +31,9 @@ exports.getChildCategory = async (sub_category_id) => {
   );
   return rows;
 };
+
+exports.deleteChildCategory = async(id)=>{
+   const sql = "DELETE FROM child_categories WHERE id = ?";
+   const [result] = await db.query(sql, [id]);
+   return result;
+}

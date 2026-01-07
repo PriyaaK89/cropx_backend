@@ -5,8 +5,6 @@ const {
   deleteCollectionCategoryMap
 } = require("../models/collectionModel");
 const fs = require("fs");
-const path = require("path");
-const imgbbService = require("../service/ImgbbService");
 
 // CREATE COLLECTION
 exports.addCollection = async (req, res) => {
@@ -28,16 +26,7 @@ exports.addCollection = async (req, res) => {
       return res.status(400).json({ message: "Collection image required" });
     }
 
-    // Upload image to ImgBB (same as product)
-    const filePath = path.resolve(req.file.path);
-    const base64Img = fs.readFileSync(filePath, { encoding: "base64" });
-
-    const imageUrl = await imgbbService.uploadToImgBB(
-      base64Img,
-      req.file.originalname
-    );
-
-    fs.unlinkSync(filePath); // remove temp file
+       const imageUrl = req.file.location; 
 
     const result = await createCollection({
       title,
@@ -92,17 +81,8 @@ exports.updateCollection = async (req, res) => {
     } = req.body;
 
     let image; // only set if new image uploaded
-
-    if (req.file) {
-      const filePath = path.resolve(req.file.path);
-      const base64Img = fs.readFileSync(filePath, { encoding: "base64" });
-
-      image = await imgbbService.uploadToImgBB(
-        base64Img,
-        req.file.originalname
-      );
-
-      fs.unlinkSync(filePath); // remove temp file
+   if (req.file) {
+      image = req.file.location; 
     }
 
     const result = await updateCollection(id, {
