@@ -1,6 +1,4 @@
 const fs = require("fs");
-const path = require("path");
-const imgbbService = require("../service/ImgbbService");
 const { createProduct, deleteProduct, getProductbyId, updateProduct, getProductsWithVariants, } = require("../models/productModel");
 const { getVariantsByProduct } = require("../models/productVarientModel");
 
@@ -14,17 +12,8 @@ exports.addProduct = async (req, res) => {
 
     if (!req.file)
       return res.status(400).json({ message: "product image required" });
-
-    // upload image to imgbb
-    const filePath = path.resolve(req.file.path);
-    const base64Img = fs.readFileSync(filePath, { encoding: "base64" });
-
-    const imageUrl = await imgbbService.uploadToImgBB(
-      base64Img,
-      req.file.originalname
-    );
-
-    fs.unlinkSync(filePath); // remove local file temp
+  console.log("S3 FILE:", req.file);
+    const imageUrl = req.file.location; 
 
     const product = {
       product_name,
@@ -222,14 +211,8 @@ exports.UpdateProducts = async (req, res) => {
 
     let imageUrl = product.product_img;
 
-    if (req.file) {
-      const filePath = path.resolve(req.file.path);
-      const base64Img = fs.readFileSync(filePath, { encoding: "base64" });
-      imageUrl = await imgbbService.uploadToImgBB(
-        base64Img,
-        req.file.originalname
-      );
-      fs.unlinkSync(filePath);
+   if (req.file) {
+      imageUrl = req.file.location; 
     }
 
     const updatedProductData = {

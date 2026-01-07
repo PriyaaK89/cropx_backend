@@ -59,7 +59,8 @@ exports.getProductbyId = async (id) => {
         p.product_type,
         p.product_img,
         p.brand,
-
+        p.mfg_date,
+        p.exp_date,
         c.id AS category_id,
         c.cate_name AS category_name,
 

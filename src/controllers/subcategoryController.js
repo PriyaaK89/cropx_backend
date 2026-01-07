@@ -1,28 +1,4 @@
-const {createSubCategory, getSubCategory} = require("../models/subcategoryModel");
-
-// exports.addSubCategory = async(req,res)=>{
-//    try{
-//  const { category_id, name } = req.body;
-//   if (!category_id || !name) {
-//     return res.status(400).json({ message: "Missing fields" });
-//   }
-
-//   const result = await createSubCategory(category_id, name);
-
-//   res.status(201).json({
-//     success: true,
-//     id: result.insertId,
-//     category_id,
-//     name,
-//   });
-//    }catch(error){
-//     console.log(error, "Sub-category creation failed");
-//     return(res.status(500).json({
-//         message: "Sub-category creation failed"
-//     }))
-//    }
-// }
-
+const {createSubCategory, getSubCategory, deleteSubCategory} = require("../models/subcategoryModel");
 
 exports.addSubCategory = async (req, res) => {
   try {
@@ -82,10 +58,31 @@ exports.getSubCategories = async (req, res) => {
   }
 };
 
+exports.deleteSubCategory = async( req,res )=>{
+    try{
+         const {id} = req.params;
 
-// exports.getSubCategories = async (req, res) => {
-//   const { category_id } = req.query;
-//   const data = await getSubCategory(category_id);
+         if(!id){
+          return res.status(400).json({
+            message: "Category ID is required."
+          })
+         }
 
-//   res.json({ success: true, data });
-// };
+         const result = await deleteSubCategory(id);
+
+         if(result.affectedRows === 0){
+          return res.status(404).json({
+            message: "Category not found."
+          })
+         }
+
+         return res.status(200).json({
+          success: true,
+          message: "SubCategory deleted successfully.",
+          deletedId: id
+         })
+    }catch(error){
+      console.log(error, "Error in deleting SubCategory!")
+      return res.status(500).json({message: "Something Went wrong."})
+    }
+}

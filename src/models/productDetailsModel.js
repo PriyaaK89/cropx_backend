@@ -1,5 +1,4 @@
 const db = require("../config/db");
-const imgbbService = require("../service/ImgbbService");
 
 exports.createProductDetails = async ({ product_id, images, product_overview, key_features_and_benefits, expert_advice, additional_information }) => {
   try {

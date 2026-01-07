@@ -1,7 +1,4 @@
-const {
-  createChildCategory,
-  getChildCategory,
-} = require("../models/childCategoryModel");
+const { createChildCategory, getChildCategory, deleteChildCategory } = require("../models/childCategoryModel");
 
 exports.addChildCategory = async (req, res) => {
   try {
@@ -29,7 +26,7 @@ exports.addChildCategory = async (req, res) => {
         sub_category_id,
         name,
         slug,
-        menu_order
+        menu_order,
       },
     });
   } catch (error) {
@@ -64,6 +61,34 @@ exports.getChildCategories = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch child categories",
+    });
+  }
+};
+
+exports.deleteChildCategories = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id)
+      return res
+        .status(400)
+        .json({ message: "Child Category ID is required." });
+
+        const result = await deleteChildCategory(id);
+         if(result.affectedRows === 0){
+          return res.status(404).json({
+            message: "Category not found."
+          })
+         }
+          return res.status(200).json({
+          success: true,
+          message: "Child Category deleted successfully.",
+          deletedId: id
+         })
+  } catch (error) {
+    console.log(error, "Error in deleting child category.");
+    return res.status(500).json({
+      message: "Something went wrong!",
     });
   }
 };

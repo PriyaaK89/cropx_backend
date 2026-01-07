@@ -2,10 +2,7 @@ const fs = require("fs");
 const { createProductDetails } = require("../models/productDetailsModel");
 const { getProductbyId } = require("../models/productModel");
 const { getVariantsByProduct } = require("../models/productVarientModel");
-const {
-  updateProductDetails,
-  getDetailsByProductId,
-} = require("../models/productDetailsModel");
+const { updateProductDetails, getDetailsByProductId, } = require("../models/productDetailsModel");
 const imgbbService = require("../service/ImgbbService");
 
 exports.addProductDetails = async (req, res) => {
@@ -17,14 +14,10 @@ exports.addProductDetails = async (req, res) => {
     }
 
     const files = req.files || [];
-    const imageUrls = [];
 
-    // Upload each file to ImgBB
-    for (const file of files) {
-      const url = await imgbbService.uploadToImgBB(file.buffer, file.originalname);
-      imageUrls.push({ src: url });
-    }
-
+    const imageUrls = files.map((file) => ({
+      src: file.location, // S3 public URL
+    }));
     // Parse JSON fields from req.body
     const product_overview = safeJSON(req.body.product_overview || "[]");
     const key_features_and_benefits = safeJSON(req.body.key_features_and_benefits || "[]");
@@ -143,6 +136,86 @@ const parseField = (value) => {
   }
 };
 
+// exports.editProductDetails = async (req, res) => {
+//   try {
+//     const { product_id } = req.params;
+
+//     const existing = await getDetailsByProductId(product_id);
+//     if (!existing) {
+//       return res.status(404).json({ message: "Details not found" });
+//     }
+
+//     let updateData = {};
+//     const files = req.files || [];
+
+//     // Handle file uploads (using memoryStorage)
+//     if (files.length > 0) {
+//       const formattedImages = [];
+
+//       for (const file of files) {
+//         const base64Img = file.buffer.toString("base64");
+//         const url = await imgbbService.uploadToImgBB(base64Img, file.originalname);
+
+//         formattedImages.push({ src: url }); // FIX ✔
+//       }
+
+//       updateData.images = JSON.stringify(formattedImages); // FIX ✔
+//     }
+
+//     // Handle JSON body fields
+//     if (req.body?.product_overview) {
+//       updateData.product_overview = JSON.stringify(parseField(req.body.product_overview));
+//     }
+
+//     if (req.body?.key_features_and_benefits) {
+//       updateData.key_features_and_benefits = JSON.stringify(
+//         parseField(req.body.key_features_and_benefits)
+//       );
+//     }
+
+//     if (req.body?.expert_advice) {
+//       updateData.expert_advice = JSON.stringify(parseField(req.body.expert_advice));
+//     }
+
+//     if (req.body?.additional_information) {
+//       updateData.additional_information = JSON.stringify(
+//         parseField(req.body.additional_information)
+//       );
+//     }
+
+//     // Update DB
+//     await updateProductDetails(product_id, updateData);
+
+//     // Fetch updated record
+//     const updated = await getDetailsByProductId(product_id);
+
+//     // Prepare response
+//     const responseData = {
+//       product_id: updated.product_id,
+
+//       images: updated.images ? JSON.parse(updated.images) : [],  // FIX ✔ No more .map()
+//       product_overview: updated.product_overview ? JSON.parse(updated.product_overview) : [],
+//       key_features_and_benefits: updated.key_features_and_benefits
+//         ? JSON.parse(updated.key_features_and_benefits)
+//         : [],
+//       expert_advice: updated.expert_advice ? JSON.parse(updated.expert_advice) : [],
+//       additional_information: updated.additional_information
+//         ? JSON.parse(updated.additional_information)
+//         : [],
+//     };
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Product Details Updated Successfully",
+//       data: responseData,
+//     });
+//   } catch (err) {
+//     console.log("Edit Product Error => ", err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+
 exports.editProductDetails = async (req, res) => {
   try {
     const { product_id } = req.params;
@@ -155,23 +228,20 @@ exports.editProductDetails = async (req, res) => {
     let updateData = {};
     const files = req.files || [];
 
-    // Handle file uploads (using memoryStorage)
+    //  Handle S3 image uploads
     if (files.length > 0) {
-      const formattedImages = [];
+      const formattedImages = files.map((file) => ({
+        src: file.location, //  S3 URL
+      }));
 
-      for (const file of files) {
-        const base64Img = file.buffer.toString("base64");
-        const url = await imgbbService.uploadToImgBB(base64Img, file.originalname);
-
-        formattedImages.push({ src: url }); // FIX ✔
-      }
-
-      updateData.images = JSON.stringify(formattedImages); // FIX ✔
+      updateData.images = JSON.stringify(formattedImages);
     }
 
-    // Handle JSON body fields
+    //  Handle JSON body fields
     if (req.body?.product_overview) {
-      updateData.product_overview = JSON.stringify(parseField(req.body.product_overview));
+      updateData.product_overview = JSON.stringify(
+        parseField(req.body.product_overview)
+      );
     }
 
     if (req.body?.key_features_and_benefits) {
@@ -181,7 +251,9 @@ exports.editProductDetails = async (req, res) => {
     }
 
     if (req.body?.expert_advice) {
-      updateData.expert_advice = JSON.stringify(parseField(req.body.expert_advice));
+      updateData.expert_advice = JSON.stringify(
+        parseField(req.body.expert_advice)
+      );
     }
 
     if (req.body?.additional_information) {
@@ -190,22 +262,25 @@ exports.editProductDetails = async (req, res) => {
       );
     }
 
-    // Update DB
+    //  Update DB
     await updateProductDetails(product_id, updateData);
 
-    // Fetch updated record
+    //  Fetch updated record
     const updated = await getDetailsByProductId(product_id);
 
-    // Prepare response
+    //  Prepare response
     const responseData = {
       product_id: updated.product_id,
-
-      images: updated.images ? JSON.parse(updated.images) : [],  // FIX ✔ No more .map()
-      product_overview: updated.product_overview ? JSON.parse(updated.product_overview) : [],
+      images: updated.images ? JSON.parse(updated.images) : [],
+      product_overview: updated.product_overview
+        ? JSON.parse(updated.product_overview)
+        : [],
       key_features_and_benefits: updated.key_features_and_benefits
         ? JSON.parse(updated.key_features_and_benefits)
         : [],
-      expert_advice: updated.expert_advice ? JSON.parse(updated.expert_advice) : [],
+      expert_advice: updated.expert_advice
+        ? JSON.parse(updated.expert_advice)
+        : [],
       additional_information: updated.additional_information
         ? JSON.parse(updated.additional_information)
         : [],
@@ -217,12 +292,10 @@ exports.editProductDetails = async (req, res) => {
       data: responseData,
     });
   } catch (err) {
-    console.log("Edit Product Error => ", err);
+    console.error("Edit Product Error => ", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 
 

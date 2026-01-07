@@ -28,7 +28,7 @@ const loginUser = async (req, res) => {
      res.setHeader("Authorization", `Bearer ${token}`);
 
     res.status(200).json({
-      message: "Login successful!",
+      message: "You have logged in successfully!",
       token,
       user: {
         id: user.id,
