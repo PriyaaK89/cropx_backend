@@ -96,7 +96,7 @@ exports.getCartData = async (user_id) => {
     0
   );
 
-  const delivery_fee = subtotal > 500 ? 0 : 0;
+  const delivery_fee = subtotal > 500 ? 0 : 70;
   const gst = 0; // optional
   const grand_total = subtotal + delivery_fee + gst;
 

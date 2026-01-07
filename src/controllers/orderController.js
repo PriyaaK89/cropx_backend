@@ -76,7 +76,7 @@ exports.placeOrder = async (req, res) => {
     }
 
     const subtotal = Number(cartData.price_summary.subtotal);
-    const delivery_fee = subtotal < 500 ? 0 : 0;
+    const delivery_fee = subtotal < 500 ? 70 : 0;
     const total_amount = subtotal + delivery_fee;
 
     let payment_status = "PENDING";
